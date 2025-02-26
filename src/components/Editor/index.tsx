@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   exportToSvg,
   exportToBlob,
-  exportToClipboard,
   Excalidraw,
   useHandleLibrary,
   MIME_TYPES,
@@ -20,7 +19,6 @@ import {
 } from "@excalidraw/excalidraw/types/types";
 import { jsPDF } from "jspdf";
 import initialData from "./initialData";
-import { Canvg } from "canvg";
 import {
   NonDeletedExcalidrawElement,
   Theme,
@@ -69,7 +67,6 @@ export default function Editor() {
   const [viewModeEnabled, setViewModeEnabled] = useState(false);
   const [zenModeEnabled, setZenModeEnabled] = useState(false);
   const [gridModeEnabled, setGridModeEnabled] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string>("");
   const [theme, setTheme] = useState("light");
   const [commentIcons, setCommentIcons] = useState<{ [id: string]: Comment }>(
     {}
@@ -131,27 +128,11 @@ export default function Editor() {
       const isInternalLink =
         link.startsWith("/") || link.includes(window.location.origin);
       if (isInternalLink && !isNewTab && !isNewWindow) {
-        // signal that we're handling the redirect ourselves
         event.preventDefault();
-        // do a custom redirect, such as passing to react-router
-        // ...
       }
     },
     []
   );
-
-  const onCopy = async (type: "png" | "svg" | "json") => {
-    if (!excalidrawAPI) {
-      return false;
-    }
-    await exportToClipboard({
-      elements: excalidrawAPI.getSceneElements(),
-      appState: excalidrawAPI.getAppState(),
-      files: excalidrawAPI.getFiles(),
-      type,
-    });
-    window.alert(`Copied to clipboard as ${type} successfully`);
-  };
 
   const onPointerDown = (
     activeTool: AppState["activeTool"],
@@ -399,15 +380,11 @@ export default function Editor() {
 
         const imageData = canvas.toDataURL("image/png");
 
-        // Создаем новый PDF
         const pdf = new jsPDF();
 
-        // Добавляем изображение в PDF
-        pdf.addImage(imageData, "PNG", 10, 10, 180, 160); // Параметры: (изображение, формат, x, y, ширина, высота)
+        pdf.addImage(imageData, "PNG", 10, 10, 180, 160);
 
-        // Сохраняем PDF
         pdf.save("excalidraw-export.pdf");
-        // setCanvasUrl(canvas.toDataURL());
       } catch (error) {
         console.error("Ошибка при экспорте в PDF:", error);
       }
@@ -546,7 +523,7 @@ export default function Editor() {
                   },
                   files: excalidrawAPI?.getFiles(),
                 });
-                setBlobUrl(window.URL.createObjectURL(blob));
+                // setBlobUrl(window.URL.createObjectURL(blob));
                 convertPngBlobToPdf(blob);
               }}
             >
@@ -568,9 +545,6 @@ export default function Editor() {
             setExcalidrawAPI(api)
           }
           initialData={initialStatePromiseRef.current.promise}
-          onChange={(elements, state) => {
-            console.info("Elements :", elements, "State : ", state);
-          }}
           viewModeEnabled={viewModeEnabled}
           zenModeEnabled={zenModeEnabled}
           gridModeEnabled={gridModeEnabled}
