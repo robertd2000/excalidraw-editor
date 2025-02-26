@@ -55,8 +55,6 @@ type PointerDownState = {
     y: number;
   };
 };
-// This is so that we use the bundled excalidraw.development.js file instead
-// of the actual source code
 
 const COMMENT_ICON_DIMENSION = 32;
 const COMMENT_INPUT_HEIGHT = 50;
@@ -68,7 +66,6 @@ export default function Editor() {
   const [zenModeEnabled, setZenModeEnabled] = useState(false);
   const [gridModeEnabled, setGridModeEnabled] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string>("");
-  //   const [canvasUrl, setCanvasUrl] = useState<string>("");
   const [exportWithDarkMode, setExportWithDarkMode] = useState(false);
   const [exportEmbedScene, setExportEmbedScene] = useState(false);
   const [theme, setTheme] = useState("light");
@@ -416,7 +413,6 @@ export default function Editor() {
   };
   return (
     <div className='App' ref={appRef}>
-      <h1> Excalidraw Example</h1>
       <div className='button-wrapper'>
         <label>
           <input
@@ -456,40 +452,7 @@ export default function Editor() {
           />
           Switch to Dark Theme
         </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={isCollaborating}
-            onChange={() => {
-              if (!isCollaborating) {
-                const collaborators = new Map();
-                collaborators.set("id1", {
-                  username: "Doremon",
-                  avatarUrl: "doremon.png",
-                });
-                collaborators.set("id2", {
-                  username: "Excalibot",
-                  avatarUrl: "excalibot.png",
-                });
-                collaborators.set("id3", {
-                  username: "Pika",
-                  avatarUrl: "pika.jpeg",
-                });
-                collaborators.set("id4", {
-                  username: "fallback",
-                  avatarUrl: "https://example.com",
-                });
-                excalidrawAPI?.updateScene({ collaborators });
-              } else {
-                excalidrawAPI?.updateScene({
-                  collaborators: new Map(),
-                });
-              }
-              setIsCollaborating(!isCollaborating);
-            }}
-          />
-          Show collaborators
-        </label>
+
         <div>
           <button onClick={onCopy.bind(null, "png")}>
             Copy to Clipboard as PNG
@@ -500,17 +463,6 @@ export default function Editor() {
           <button onClick={onCopy.bind(null, "json")}>
             Copy to Clipboard as JSON
           </button>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            gap: "1em",
-            justifyContent: "center",
-            marginTop: "1em",
-          }}
-        >
-          <div>x: {pointerData?.pointer.x ?? 0}</div>
-          <div>y: {pointerData?.pointer.y ?? 0}</div>
         </div>
       </div>
       <div className='excalidraw-wrapper'>
@@ -545,22 +497,6 @@ export default function Editor() {
       </div>
 
       <div className='export-wrapper button-wrapper'>
-        <label className='export-wrapper__checkbox'>
-          <input
-            type='checkbox'
-            checked={exportWithDarkMode}
-            onChange={() => setExportWithDarkMode(!exportWithDarkMode)}
-          />
-          Export with dark mode
-        </label>
-        <label className='export-wrapper__checkbox'>
-          <input
-            type='checkbox'
-            checked={exportEmbedScene}
-            onChange={() => setExportEmbedScene(!exportEmbedScene)}
-          />
-          Export with embed scene
-        </label>
         <button
           onClick={async () => {
             if (!excalidrawAPI) {
@@ -577,13 +513,10 @@ export default function Editor() {
               },
               files: excalidrawAPI?.getFiles(),
             });
-            appRef.current.querySelector(".export-svg").innerHTML =
-              svg.outerHTML;
           }}
         >
           Export to SVG
         </button>
-        <div className='export export-svg'></div>
 
         <button
           onClick={async () => {
@@ -605,9 +538,6 @@ export default function Editor() {
         >
           Export to Blob
         </button>
-        <div className='export export-blob'>
-          <img src={blobUrl} alt='' />
-        </div>
       </div>
     </div>
   );
