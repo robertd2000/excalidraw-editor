@@ -9,18 +9,18 @@ import {
   sceneCoordsToViewportCoords,
   viewportCoordsToSceneCoords,
   MainMenu,
+  exportToCanvas,
 } from "@excalidraw/excalidraw";
 import {
   AppState,
   BinaryFileData,
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
-  Gesture,
   PointerDownState as ExcalidrawPointerDownState,
 } from "@excalidraw/excalidraw/types/types";
-
+import { jsPDF } from "jspdf";
 import initialData from "./initialData";
-
+import { Canvg } from "canvg";
 import {
   NonDeletedExcalidrawElement,
   Theme,
@@ -379,6 +379,40 @@ export default function Editor() {
     );
   };
 
+  const handleExportPDF = async () => {
+    if (excalidrawAPI) {
+      try {
+        if (!excalidrawAPI) {
+          return;
+        }
+        const canvas = await exportToCanvas({
+          elements: excalidrawAPI.getSceneElements(),
+          appState: {
+            ...initialData.appState,
+          },
+          files: excalidrawAPI.getFiles(),
+        });
+        const ctx = canvas.getContext("2d")!;
+        ctx.font = "30px Virgil";
+        ctx.strokeText("My custom text", 50, 60);
+
+        const imageData = canvas.toDataURL("image/png");
+
+        // Создаем новый PDF
+        const pdf = new jsPDF();
+
+        // Добавляем изображение в PDF
+        pdf.addImage(imageData, "PNG", 10, 10, 180, 160); // Параметры: (изображение, формат, x, y, ширина, высота)
+
+        // Сохраняем PDF
+        pdf.save("excalidraw-export.pdf");
+        // setCanvasUrl(canvas.toDataURL());
+      } catch (error) {
+        console.error("Ошибка при экспорте в PDF:", error);
+      }
+    }
+  };
+
   const renderMenu = () => {
     return (
       <MainMenu>
@@ -502,17 +536,14 @@ export default function Editor() {
             >
               Export to Blob
             </button>
-          </div>
 
-          {/* <button className="" onClick={onCopy.bind(null, "png")}>
-            Copy to Clipboard as PNG
-          </button>
-          <button onClick={onCopy.bind(null, "svg")}>
-            Copy to Clipboard as SVG
-          </button>
-          <button onClick={onCopy.bind(null, "json")}>
-            Copy to Clipboard as JSON
-          </button> */}
+            <button
+              className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+              onClick={handleExportPDF}
+            >
+              Export to PDF
+            </button>
+          </div>
         </div>
       </div>
       <div className='excalidraw-wrapper'>
