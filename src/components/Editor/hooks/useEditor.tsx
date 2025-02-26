@@ -9,7 +9,7 @@ import { NonDeletedExcalidrawElement } from "@excalidraw/excalidraw/types/elemen
 import { ResolvablePromise } from "@excalidraw/excalidraw/types/utils";
 import { useExcalidrawContext } from "../../../store/excalidraw";
 import { resolvablePromise } from "../../../utils";
-import initialData from "../initialData";
+import initialData from "../../../constants/initialData";
 
 export function useEditor() {
   const appRef = useRef<any>(null);

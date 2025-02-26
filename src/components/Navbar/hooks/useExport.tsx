@@ -5,7 +5,7 @@ import {
 } from "@excalidraw/excalidraw";
 import { useExcalidrawContext } from "../../../store/excalidraw";
 import { jsPDF } from "jspdf";
-import initialData from "../../Editor/initialData";
+import initialData from "../../../constants/initialData";
 import { convertPngBlobToPdf } from "../../../utils/blob";
 
 export function useExport() {
