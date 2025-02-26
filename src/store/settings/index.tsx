@@ -1,11 +1,14 @@
 import { createContext, useContext } from "react";
-import { Settings } from "../../type/settings";
+import { SettingsContextType } from "../../type/settings";
 
-const SettingsContext = createContext<Settings>({
-  viewMode: false,
-  zenMode: false,
-  gridMode: false,
-  theme: "light",
+const SettingsContext = createContext<SettingsContextType>({
+  settings: {
+    viewMode: false,
+    zenMode: false,
+    gridMode: false,
+    theme: "light",
+  },
+  setSettings: () => {},
 });
 
 export const useSettingsContext = () => {

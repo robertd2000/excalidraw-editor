@@ -6,3 +6,8 @@ export interface Settings {
   gridMode: boolean;
   theme: Theme;
 }
+
+export interface SettingsContextType {
+  settings: Settings;
+  setSettings: React.Dispatch<React.SetStateAction<Settings>>;
+}
