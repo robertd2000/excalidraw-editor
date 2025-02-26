@@ -1,11 +1,97 @@
 import { Theme } from "@excalidraw/excalidraw/types/element/types";
 import { useSettingsContext } from "../../store/settings";
+import { useExcalidrawContext } from "../../store/excalidraw";
+import {
+  exportToBlob,
+  exportToCanvas,
+  exportToSvg,
+} from "@excalidraw/excalidraw";
+import { jsPDF } from "jspdf";
+import { convertPngBlobToPdf } from "../../utils/blob";
+import initialData from "../Editor/initialData";
 
 export function Navbar() {
   const {
     setSettings,
     settings: { viewMode, zenMode, gridMode, theme },
   } = useSettingsContext();
+
+  const handleExportPDF = async () => {
+    if (excalidrawAPI) {
+      try {
+        if (!excalidrawAPI) {
+          return;
+        }
+        const canvas = await exportToCanvas({
+          elements: excalidrawAPI.getSceneElements(),
+          appState: {
+            ...initialData.appState,
+          },
+          files: excalidrawAPI.getFiles(),
+        });
+        const ctx = canvas.getContext("2d")!;
+        ctx.font = "30px Virgil";
+        ctx.strokeText("My custom text", 50, 60);
+
+        const imageData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF();
+
+        pdf.addImage(imageData, "PNG", 10, 10, 180, 160);
+
+        pdf.save("excalidraw-export.pdf");
+      } catch (error) {
+        console.error("Ошибка при экспорте в PDF:", error);
+      }
+    }
+  };
+
+  const handleExportToSVG = async () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const svg = await exportToSvg({
+      elements: excalidrawAPI?.getSceneElements(),
+      appState: {
+        ...initialData.appState,
+        width: 300,
+        height: 100,
+      },
+      files: excalidrawAPI?.getFiles(),
+    });
+
+    const blob = new Blob([svg.outerHTML], {
+      type: "image/svg+xml",
+    });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "excalidraw-export.svg";
+    document.body.appendChild(a);
+    a.click();
+
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  const { excalidrawAPI } = useExcalidrawContext();
+
+  const handleExportToBlob = async () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const blob = await exportToBlob({
+      elements: excalidrawAPI?.getSceneElements(),
+      mimeType: "image/png",
+      appState: {
+        ...initialData.appState,
+      },
+      files: excalidrawAPI?.getFiles(),
+    });
+    // setBlobUrl(window.URL.createObjectURL(blob));
+    convertPngBlobToPdf(blob);
+  };
 
   return (
     <div className='flex justify-between p-5 bg-indigo-300 items-center'>
@@ -79,21 +165,21 @@ export function Navbar() {
         <div className='flex justify-between gap-2'>
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-            // onClick={handleExportToSVG}
+            onClick={handleExportToSVG}
           >
             Export to SVG
           </button>
 
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-            // onClick={handleExportToBlob}
+            onClick={handleExportToBlob}
           >
             Export to Blob
           </button>
 
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-            // onClick={handleExportPDF}
+            onClick={handleExportPDF}
           >
             Export to PDF
           </button>

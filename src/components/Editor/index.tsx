@@ -1,18 +1,14 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import {
-  exportToSvg,
-  exportToBlob,
   Excalidraw,
   useHandleLibrary,
   MIME_TYPES,
-  exportToCanvas,
 } from "@excalidraw/excalidraw";
 import {
   BinaryFileData,
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
 } from "@excalidraw/excalidraw/types/types";
-import { jsPDF } from "jspdf";
 import initialData from "./initialData";
 import {
   NonDeletedExcalidrawElement,
@@ -20,9 +16,9 @@ import {
 } from "@excalidraw/excalidraw/types/element/types";
 import { resolvablePromise } from "../../utils";
 import { ResolvablePromise } from "@excalidraw/excalidraw/types/utils";
-import { convertPngBlobToPdf } from "../../utils/blob";
 import { RenderMenu } from "./RenderMenu";
 import { useSettingsContext } from "../../store/settings";
+import { useExcalidrawContext } from "../../store/excalidraw";
 
 declare global {
   interface Window {
@@ -43,8 +39,7 @@ export default function Editor() {
     initialStatePromiseRef.current.promise = resolvablePromise();
   }
 
-  const [excalidrawAPI, setExcalidrawAPI] =
-    useState<ExcalidrawImperativeAPI | null>(null);
+  const { excalidrawAPI, setExcalidrawAPI } = useExcalidrawContext();
 
   useHandleLibrary({ excalidrawAPI });
 
@@ -96,81 +91,6 @@ export default function Editor() {
     },
     []
   );
-
-  const handleExportPDF = async () => {
-    if (excalidrawAPI) {
-      try {
-        if (!excalidrawAPI) {
-          return;
-        }
-        const canvas = await exportToCanvas({
-          elements: excalidrawAPI.getSceneElements(),
-          appState: {
-            ...initialData.appState,
-          },
-          files: excalidrawAPI.getFiles(),
-        });
-        const ctx = canvas.getContext("2d")!;
-        ctx.font = "30px Virgil";
-        ctx.strokeText("My custom text", 50, 60);
-
-        const imageData = canvas.toDataURL("image/png");
-
-        const pdf = new jsPDF();
-
-        pdf.addImage(imageData, "PNG", 10, 10, 180, 160);
-
-        pdf.save("excalidraw-export.pdf");
-      } catch (error) {
-        console.error("Ошибка при экспорте в PDF:", error);
-      }
-    }
-  };
-
-  const handleExportToSVG = async () => {
-    if (!excalidrawAPI) {
-      return;
-    }
-    const svg = await exportToSvg({
-      elements: excalidrawAPI?.getSceneElements(),
-      appState: {
-        ...initialData.appState,
-        width: 300,
-        height: 100,
-      },
-      files: excalidrawAPI?.getFiles(),
-    });
-
-    const blob = new Blob([svg.outerHTML], {
-      type: "image/svg+xml",
-    });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "excalidraw-export.svg";
-    document.body.appendChild(a);
-    a.click();
-
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  };
-
-  const handleExportToBlob = async () => {
-    if (!excalidrawAPI) {
-      return;
-    }
-    const blob = await exportToBlob({
-      elements: excalidrawAPI?.getSceneElements(),
-      mimeType: "image/png",
-      appState: {
-        ...initialData.appState,
-      },
-      files: excalidrawAPI?.getFiles(),
-    });
-    // setBlobUrl(window.URL.createObjectURL(blob));
-    convertPngBlobToPdf(blob);
-  };
 
   return (
     <div className='App' ref={appRef}>
