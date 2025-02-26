@@ -33,6 +33,7 @@ import {
   distance2d,
 } from "../../utils";
 import { ResolvablePromise } from "@excalidraw/excalidraw/types/utils";
+import { convertPngBlobToPdf } from "../../utils/blob";
 
 declare global {
   interface Window {
@@ -546,6 +547,7 @@ export default function Editor() {
                   files: excalidrawAPI?.getFiles(),
                 });
                 setBlobUrl(window.URL.createObjectURL(blob));
+                convertPngBlobToPdf(blob);
               }}
             >
               Export to Blob
