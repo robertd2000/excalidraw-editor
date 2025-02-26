@@ -3,6 +3,7 @@ import "./App.scss";
 import Editor from "./components/Editor";
 import SettingsContext from "./store/settings";
 import { Settings } from "./type/settings";
+import { Navbar } from "./components/Navbar";
 
 function App() {
   const [settings, setSettings] = useState<Settings>({
@@ -14,6 +15,7 @@ function App() {
 
   return (
     <SettingsContext.Provider value={{ settings, setSettings }}>
+      <Navbar />
       <Editor />
     </SettingsContext.Provider>
   );
