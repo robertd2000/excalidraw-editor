@@ -400,35 +400,53 @@ export default function Editor() {
 
   return (
     <div className='App' ref={appRef}>
-      <div className='flex justify-between p-5'>
-        <div className='flex justify-between gap-2'>
-          <label className='flex justify-between gap-1 items-center'>
+      <div className='flex justify-between p-5 bg-indigo-300 items-center'>
+        <div className='flex justify-between gap-2 items-center'>
+          <div className='flex items-center mb-4'>
             <input
+              id='view-checkbox'
               type='checkbox'
               checked={viewModeEnabled}
               onChange={() => setViewModeEnabled(!viewModeEnabled)}
+              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
             />
-            View mode
-          </label>
-          <label className='flex justify-between gap-1 items-center'>
+            <label htmlFor='view-checkbox' className='ms-2 text-sm font-medium'>
+              View mode
+            </label>
+          </div>
+
+          <div className='flex items-center mb-4'>
             <input
+              id='zen-checkbox'
               type='checkbox'
               checked={zenModeEnabled}
               onChange={() => setZenModeEnabled(!zenModeEnabled)}
+              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
             />
-            Zen mode
-          </label>
-          <label className='flex justify-between gap-1 items-center'>
+            <label htmlFor='zen-checkbox' className='ms-2 text-sm font-medium'>
+              Zen mode
+            </label>
+          </div>
+
+          <div className='flex items-center mb-4'>
             <input
+              id='grid-checkbox'
               type='checkbox'
               checked={gridModeEnabled}
               onChange={() => setGridModeEnabled(!gridModeEnabled)}
+              className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
             />
-            Grid mode
-          </label>
-          <label className='flex justify-between gap-1 items-center'>
+            <label htmlFor='grid-checkbox' className='ms-2 text-sm font-medium'>
+              Grid mode
+            </label>
+          </div>
+        </div>
+
+        <div className='flex justify-between gap-4'>
+          <label className='inline-flex items-center cursor-pointer'>
             <input
               type='checkbox'
+              className='sr-only peer'
               checked={theme === "dark"}
               onChange={() => {
                 let newTheme = "light";
@@ -438,50 +456,54 @@ export default function Editor() {
                 setTheme(newTheme);
               }}
             />
-            Switch to Dark Theme
+            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+            <span className='ms-3 text-sm font-medium '>
+              Switch to Dark Theme
+            </span>
           </label>
-        </div>
 
-        <div className='flex justify-between gap-2'>
-          <button
-            className='border-1 border-black p-2 rounded-md cursor-pointer'
-            onClick={async () => {
-              if (!excalidrawAPI) {
-                return;
-              }
-              const svg = await exportToSvg({
-                elements: excalidrawAPI?.getSceneElements(),
-                appState: {
-                  ...initialData.appState,
-                  width: 300,
-                  height: 100,
-                },
-                files: excalidrawAPI?.getFiles(),
-              });
-            }}
-          >
-            Export to SVG
-          </button>
+          <div className='flex justify-between gap-2'>
+            <button
+              className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+              onClick={async () => {
+                if (!excalidrawAPI) {
+                  return;
+                }
+                const svg = await exportToSvg({
+                  elements: excalidrawAPI?.getSceneElements(),
+                  appState: {
+                    ...initialData.appState,
+                    width: 300,
+                    height: 100,
+                  },
+                  files: excalidrawAPI?.getFiles(),
+                });
+              }}
+            >
+              Export to SVG
+            </button>
 
-          <button
-            className='border-1 border-black p-2 rounded-md cursor-pointer'
-            onClick={async () => {
-              if (!excalidrawAPI) {
-                return;
-              }
-              const blob = await exportToBlob({
-                elements: excalidrawAPI?.getSceneElements(),
-                mimeType: "image/png",
-                appState: {
-                  ...initialData.appState,
-                },
-                files: excalidrawAPI?.getFiles(),
-              });
-              setBlobUrl(window.URL.createObjectURL(blob));
-            }}
-          >
-            Export to Blob
-          </button>
+            <button
+              className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+              onClick={async () => {
+                if (!excalidrawAPI) {
+                  return;
+                }
+                const blob = await exportToBlob({
+                  elements: excalidrawAPI?.getSceneElements(),
+                  mimeType: "image/png",
+                  appState: {
+                    ...initialData.appState,
+                  },
+                  files: excalidrawAPI?.getFiles(),
+                });
+                setBlobUrl(window.URL.createObjectURL(blob));
+              }}
+            >
+              Export to Blob
+            </button>
+          </div>
+
           {/* <button className="" onClick={onCopy.bind(null, "png")}>
             Copy to Clipboard as PNG
           </button>
