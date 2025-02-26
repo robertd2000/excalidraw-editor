@@ -391,6 +391,51 @@ export default function Editor() {
     }
   };
 
+  const handleExportToSVG = async () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const svg = await exportToSvg({
+      elements: excalidrawAPI?.getSceneElements(),
+      appState: {
+        ...initialData.appState,
+        width: 300,
+        height: 100,
+      },
+      files: excalidrawAPI?.getFiles(),
+    });
+
+    const blob = new Blob([svg.outerHTML], {
+      type: "image/svg+xml",
+    });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "excalidraw-export.svg";
+    document.body.appendChild(a);
+    a.click();
+
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
+  const handleExportToBlob = async () => {
+    if (!excalidrawAPI) {
+      return;
+    }
+    const blob = await exportToBlob({
+      elements: excalidrawAPI?.getSceneElements(),
+      mimeType: "image/png",
+      appState: {
+        ...initialData.appState,
+      },
+      files: excalidrawAPI?.getFiles(),
+    });
+    // setBlobUrl(window.URL.createObjectURL(blob));
+    convertPngBlobToPdf(blob);
+  };
+
   const renderMenu = () => {
     return (
       <MainMenu>
@@ -477,55 +522,14 @@ export default function Editor() {
           <div className='flex justify-between gap-2'>
             <button
               className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-              onClick={async () => {
-                if (!excalidrawAPI) {
-                  return;
-                }
-                const svg = await exportToSvg({
-                  elements: excalidrawAPI?.getSceneElements(),
-                  appState: {
-                    ...initialData.appState,
-                    width: 300,
-                    height: 100,
-                  },
-                  files: excalidrawAPI?.getFiles(),
-                });
-
-                const blob = new Blob([svg.outerHTML], {
-                  type: "image/svg+xml",
-                });
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "excalidraw-export.svg";
-                document.body.appendChild(a);
-                a.click();
-
-                URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-              }}
+              onClick={handleExportToSVG}
             >
               Export to SVG
             </button>
 
             <button
               className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-              onClick={async () => {
-                if (!excalidrawAPI) {
-                  return;
-                }
-                const blob = await exportToBlob({
-                  elements: excalidrawAPI?.getSceneElements(),
-                  mimeType: "image/png",
-                  appState: {
-                    ...initialData.appState,
-                  },
-                  files: excalidrawAPI?.getFiles(),
-                });
-                // setBlobUrl(window.URL.createObjectURL(blob));
-                convertPngBlobToPdf(blob);
-              }}
+              onClick={handleExportToBlob}
             >
               Export to Blob
             </button>
