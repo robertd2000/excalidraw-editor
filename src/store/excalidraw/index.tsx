@@ -1,5 +1,5 @@
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { createContext, useContext } from "react";
+import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 
 const ExcalidrawContext = createContext<{
   excalidrawAPI: ExcalidrawImperativeAPI | null;

@@ -4,10 +4,10 @@ import {
   BinaryFileData,
   ExcalidrawInitialDataState,
 } from "@excalidraw/excalidraw/types/types";
-import { useExcalidrawContext } from "../../../store/excalidraw";
 import { MIME_TYPES, useHandleLibrary } from "@excalidraw/excalidraw";
 import { NonDeletedExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { ResolvablePromise } from "@excalidraw/excalidraw/types/utils";
+import { useExcalidrawContext } from "../../../store/excalidraw";
 import { resolvablePromise } from "../../../utils";
 import initialData from "../initialData";
 

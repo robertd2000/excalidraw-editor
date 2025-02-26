@@ -1,7 +1,7 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { Theme } from "@excalidraw/excalidraw/types/element/types";
-import { RenderMenu } from "./RenderMenu";
+import { RenderMenu } from "../RenderMenu";
 import { useSettingsContext } from "../../store/settings";
 import { useEditor } from "./hooks/useEditor";
 
