@@ -1,44 +1,42 @@
 import {
   exportToBlob,
-  exportToCanvas,
   exportToSvg,
+  exportToCanvas,
 } from "@excalidraw/excalidraw";
 import { useExcalidrawContext } from "../../../store/excalidraw";
-import { jsPDF } from "jspdf";
 import initialData from "../../../constants/initialData";
 import { convertPngBlobToPdf } from "../../../utils/blob";
+import { jsPDF } from "jspdf";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
 
   const handleExportPDF = async () => {
-    if (excalidrawAPI) {
-      try {
-        if (!excalidrawAPI) {
-          return;
-        }
-        const canvas = await exportToCanvas({
-          elements: excalidrawAPI.getSceneElements(),
-          appState: {
-            ...initialData.appState,
-          },
-          files: excalidrawAPI.getFiles(),
-        });
-        const ctx = canvas.getContext("2d")!;
-        ctx.font = "30px Virgil";
-        ctx.strokeText("My custom text", 50, 60);
+    const scaleFactor = 4;
 
-        const imageData = canvas.toDataURL("image/png");
+    const canvas = await exportToCanvas({
+      elements: excalidrawAPI?.getSceneElements()!,
+      appState: {
+        ...initialData.appState,
+        exportScale: scaleFactor,
+      },
+      files: excalidrawAPI?.getFiles()!,
+    });
+    const pdf = new jsPDF("p", "mm", "a4");
 
-        const pdf = new jsPDF();
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        pdf.addImage(imageData, "PNG", 10, 10, 180, 160);
+    pdf.addImage(
+      canvas.toDataURL("image/png", 1.0),
+      "PNG",
+      10,
+      10,
+      imgWidth,
+      imgHeight
+    );
 
-        pdf.save("excalidraw-export.pdf");
-      } catch (error) {
-        console.error("Ошибка при экспорте в PDF:", error);
-      }
-    }
+    pdf.save("canvas-export.pdf");
   };
 
   const handleExportToSVG = async () => {
