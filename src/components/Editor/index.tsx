@@ -2,37 +2,26 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   exportToSvg,
   exportToBlob,
-  exportToClipboard,
   Excalidraw,
   useHandleLibrary,
   MIME_TYPES,
-  sceneCoordsToViewportCoords,
-  viewportCoordsToSceneCoords,
-  MainMenu,
+  exportToCanvas,
 } from "@excalidraw/excalidraw";
 import {
-  AppState,
   BinaryFileData,
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
-  Gesture,
-  PointerDownState as ExcalidrawPointerDownState,
 } from "@excalidraw/excalidraw/types/types";
-
+import { jsPDF } from "jspdf";
 import initialData from "./initialData";
-
 import {
   NonDeletedExcalidrawElement,
   Theme,
 } from "@excalidraw/excalidraw/types/element/types";
-import { nanoid } from "nanoid";
-import {
-  resolvablePromise,
-  withBatchedUpdates,
-  withBatchedUpdatesThrottled,
-  distance2d,
-} from "../../utils";
+import { resolvablePromise } from "../../utils";
 import { ResolvablePromise } from "@excalidraw/excalidraw/types/utils";
+import { convertPngBlobToPdf } from "../../utils/blob";
+import { RenderMenu } from "./RenderMenu";
 
 declare global {
   interface Window {
@@ -40,41 +29,12 @@ declare global {
   }
 }
 
-type Comment = {
-  x: number;
-  y: number;
-  value: string;
-  id?: string;
-};
-
-type PointerDownState = {
-  x: number;
-  y: number;
-  hitElement: Comment;
-  onMove: any;
-  onUp: any;
-  hitElementOffsets: {
-    x: number;
-    y: number;
-  };
-};
-
-const COMMENT_ICON_DIMENSION = 32;
-const COMMENT_INPUT_HEIGHT = 50;
-const COMMENT_INPUT_WIDTH = 150;
-
 export default function Editor() {
   const appRef = useRef<any>(null);
   const [viewModeEnabled, setViewModeEnabled] = useState(false);
   const [zenModeEnabled, setZenModeEnabled] = useState(false);
   const [gridModeEnabled, setGridModeEnabled] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string>("");
   const [theme, setTheme] = useState("light");
-  const [commentIcons, setCommentIcons] = useState<{ [id: string]: Comment }>(
-    {}
-  );
-  const [comment, setComment] = useState<Comment | null>(null);
-  const isCollaborating = false;
   const initialStatePromiseRef = useRef<{
     promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
   }>({ promise: null! });
@@ -130,279 +90,92 @@ export default function Editor() {
       const isInternalLink =
         link.startsWith("/") || link.includes(window.location.origin);
       if (isInternalLink && !isNewTab && !isNewWindow) {
-        // signal that we're handling the redirect ourselves
         event.preventDefault();
-        // do a custom redirect, such as passing to react-router
-        // ...
       }
     },
     []
   );
 
-  const onCopy = async (type: "png" | "svg" | "json") => {
-    if (!excalidrawAPI) {
-      return false;
-    }
-    await exportToClipboard({
-      elements: excalidrawAPI.getSceneElements(),
-      appState: excalidrawAPI.getAppState(),
-      files: excalidrawAPI.getFiles(),
-      type,
-    });
-    window.alert(`Copied to clipboard as ${type} successfully`);
-  };
-
-  const onPointerDown = (
-    activeTool: AppState["activeTool"],
-    pointerDownState: ExcalidrawPointerDownState
-  ) => {
-    if (activeTool.type === "custom" && activeTool.customType === "comment") {
-      const { x, y } = pointerDownState.origin;
-      setComment({ x, y, value: "" });
-    }
-  };
-
-  const rerenderCommentIcons = () => {
-    if (!excalidrawAPI) {
-      return false;
-    }
-    const commentIconsElements = appRef.current.querySelectorAll(
-      ".comment-icon"
-    ) as HTMLElement[];
-    commentIconsElements.forEach((ele) => {
-      const id = ele.id;
-      const appstate = excalidrawAPI.getAppState();
-      const { x, y } = sceneCoordsToViewportCoords(
-        { sceneX: commentIcons[id].x, sceneY: commentIcons[id].y },
-        appstate
-      );
-      ele.style.left = `${
-        x - COMMENT_ICON_DIMENSION / 2 - appstate!.offsetLeft
-      }px`;
-      ele.style.top = `${
-        y - COMMENT_ICON_DIMENSION / 2 - appstate!.offsetTop
-      }px`;
-    });
-  };
-
-  const onPointerMoveFromPointerDownHandler = (
-    pointerDownState: PointerDownState
-  ) => {
-    return withBatchedUpdatesThrottled((event) => {
-      if (!excalidrawAPI) {
-        return false;
-      }
-      const { x, y } = viewportCoordsToSceneCoords(
-        {
-          clientX: event.clientX - pointerDownState.hitElementOffsets.x,
-          clientY: event.clientY - pointerDownState.hitElementOffsets.y,
-        },
-        excalidrawAPI.getAppState()
-      );
-      setCommentIcons({
-        ...commentIcons,
-        [pointerDownState.hitElement.id!]: {
-          ...commentIcons[pointerDownState.hitElement.id!],
-          x,
-          y,
-        },
-      });
-    });
-  };
-  const onPointerUpFromPointerDownHandler = (
-    pointerDownState: PointerDownState
-  ) => {
-    return withBatchedUpdates((event) => {
-      window.removeEventListener("pointermove", pointerDownState.onMove);
-      window.removeEventListener("pointerup", pointerDownState.onUp);
-      excalidrawAPI?.setActiveTool({ type: "selection" });
-      const distance = distance2d(
-        pointerDownState.x,
-        pointerDownState.y,
-        event.clientX,
-        event.clientY
-      );
-      if (distance === 0) {
-        if (!comment) {
-          setComment({
-            x: pointerDownState.hitElement.x + 60,
-            y: pointerDownState.hitElement.y,
-            value: pointerDownState.hitElement.value,
-            id: pointerDownState.hitElement.id,
-          });
-        } else {
-          setComment(null);
+  const handleExportPDF = async () => {
+    if (excalidrawAPI) {
+      try {
+        if (!excalidrawAPI) {
+          return;
         }
+        const canvas = await exportToCanvas({
+          elements: excalidrawAPI.getSceneElements(),
+          appState: {
+            ...initialData.appState,
+          },
+          files: excalidrawAPI.getFiles(),
+        });
+        const ctx = canvas.getContext("2d")!;
+        ctx.font = "30px Virgil";
+        ctx.strokeText("My custom text", 50, 60);
+
+        const imageData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF();
+
+        pdf.addImage(imageData, "PNG", 10, 10, 180, 160);
+
+        pdf.save("excalidraw-export.pdf");
+      } catch (error) {
+        console.error("Ошибка при экспорте в PDF:", error);
       }
-    });
+    }
   };
-  const saveComment = () => {
-    if (!comment) {
+
+  const handleExportToSVG = async () => {
+    if (!excalidrawAPI) {
       return;
     }
-    if (!comment.id && !comment.value) {
-      setComment(null);
-      return;
-    }
-    const id = comment.id || nanoid();
-    setCommentIcons({
-      ...commentIcons,
-      [id]: {
-        x: comment.id ? comment.x - 60 : comment.x,
-        y: comment.y,
-        id,
-        value: comment.value,
+    const svg = await exportToSvg({
+      elements: excalidrawAPI?.getSceneElements(),
+      appState: {
+        ...initialData.appState,
+        width: 300,
+        height: 100,
       },
+      files: excalidrawAPI?.getFiles(),
     });
-    setComment(null);
-  };
 
-  const renderCommentIcons = () => {
-    return Object.values(commentIcons).map((commentIcon) => {
-      if (!excalidrawAPI) {
-        return false;
-      }
-      const appState = excalidrawAPI.getAppState();
-      const { x, y } = sceneCoordsToViewportCoords(
-        { sceneX: commentIcon.x, sceneY: commentIcon.y },
-        excalidrawAPI.getAppState()
-      );
-      return (
-        <div
-          id={commentIcon.id}
-          key={commentIcon.id}
-          style={{
-            top: `${y - COMMENT_ICON_DIMENSION / 2 - appState!.offsetTop}px`,
-            left: `${x - COMMENT_ICON_DIMENSION / 2 - appState!.offsetLeft}px`,
-            position: "absolute",
-            zIndex: 1,
-            width: `${COMMENT_ICON_DIMENSION}px`,
-            height: `${COMMENT_ICON_DIMENSION}px`,
-            cursor: "pointer",
-            touchAction: "none",
-          }}
-          className='comment-icon'
-          onPointerDown={(event) => {
-            event.preventDefault();
-            if (comment) {
-              commentIcon.value = comment.value;
-              saveComment();
-            }
-            const pointerDownState: any = {
-              x: event.clientX,
-              y: event.clientY,
-              hitElement: commentIcon,
-              hitElementOffsets: { x: event.clientX - x, y: event.clientY - y },
-            };
-            const onPointerMove =
-              onPointerMoveFromPointerDownHandler(pointerDownState);
-            const onPointerUp =
-              onPointerUpFromPointerDownHandler(pointerDownState);
-            window.addEventListener("pointermove", onPointerMove);
-            window.addEventListener("pointerup", onPointerUp);
-
-            pointerDownState.onMove = onPointerMove;
-            pointerDownState.onUp = onPointerUp;
-
-            excalidrawAPI?.setActiveTool({
-              type: "custom",
-              customType: "comment",
-            });
-          }}
-        >
-          <div className='comment-avatar'>
-            <img src='doremon.png' alt='doremon' />
-          </div>
-        </div>
-      );
+    const blob = new Blob([svg.outerHTML], {
+      type: "image/svg+xml",
     });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "excalidraw-export.svg";
+    document.body.appendChild(a);
+    a.click();
+
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
-  const renderComment = () => {
-    if (!comment) {
-      return null;
+  const handleExportToBlob = async () => {
+    if (!excalidrawAPI) {
+      return;
     }
-    const appState = excalidrawAPI?.getAppState()!;
-    const { x, y } = sceneCoordsToViewportCoords(
-      { sceneX: comment.x, sceneY: comment.y },
-      appState
-    );
-    let top = y - COMMENT_ICON_DIMENSION / 2 - appState.offsetTop;
-    let left = x - COMMENT_ICON_DIMENSION / 2 - appState.offsetLeft;
-
-    if (
-      top + COMMENT_INPUT_HEIGHT <
-      appState.offsetTop + COMMENT_INPUT_HEIGHT
-    ) {
-      top = COMMENT_ICON_DIMENSION / 2;
-    }
-    if (top + COMMENT_INPUT_HEIGHT > appState.height) {
-      top = appState.height - COMMENT_INPUT_HEIGHT - COMMENT_ICON_DIMENSION / 2;
-    }
-    if (
-      left + COMMENT_INPUT_WIDTH <
-      appState.offsetLeft + COMMENT_INPUT_WIDTH
-    ) {
-      left = COMMENT_ICON_DIMENSION / 2;
-    }
-    if (left + COMMENT_INPUT_WIDTH > appState.width) {
-      left = appState.width - COMMENT_INPUT_WIDTH - COMMENT_ICON_DIMENSION / 2;
-    }
-
-    return (
-      <textarea
-        className='comment'
-        style={{
-          top: `${top}px`,
-          left: `${left}px`,
-          position: "absolute",
-          zIndex: 1,
-          height: `${COMMENT_INPUT_HEIGHT}px`,
-          width: `${COMMENT_INPUT_WIDTH}px`,
-        }}
-        ref={(ref) => {
-          setTimeout(() => ref?.focus());
-        }}
-        placeholder={comment.value ? "Reply" : "Comment"}
-        value={comment.value}
-        onChange={(event) => {
-          setComment({ ...comment, value: event.target.value });
-        }}
-        onBlur={saveComment}
-        onKeyDown={(event) => {
-          if (!event.shiftKey && event.key === "Enter") {
-            event.preventDefault();
-            saveComment();
-          }
-        }}
-      />
-    );
-  };
-
-  const renderMenu = () => {
-    return (
-      <MainMenu>
-        <MainMenu.DefaultItems.SaveAsImage />
-        <MainMenu.DefaultItems.Export />
-        <MainMenu.Separator />
-        <MainMenu.DefaultItems.LiveCollaborationTrigger
-          isCollaborating={isCollaborating}
-          onSelect={() => window.alert("You clicked on collab button")}
-        />
-        <MainMenu.Group title='Excalidraw links'>
-          <MainMenu.DefaultItems.Socials />
-        </MainMenu.Group>
-        <MainMenu.Separator />
-        <MainMenu.DefaultItems.Help />
-      </MainMenu>
-    );
+    const blob = await exportToBlob({
+      elements: excalidrawAPI?.getSceneElements(),
+      mimeType: "image/png",
+      appState: {
+        ...initialData.appState,
+      },
+      files: excalidrawAPI?.getFiles(),
+    });
+    // setBlobUrl(window.URL.createObjectURL(blob));
+    convertPngBlobToPdf(blob);
   };
 
   return (
     <div className='App' ref={appRef}>
       <div className='flex justify-between p-5 bg-indigo-300 items-center'>
         <div className='flex justify-between gap-2 items-center'>
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='view-checkbox'
               type='checkbox'
@@ -415,7 +188,7 @@ export default function Editor() {
             </label>
           </div>
 
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='zen-checkbox'
               type='checkbox'
@@ -428,7 +201,7 @@ export default function Editor() {
             </label>
           </div>
 
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='grid-checkbox'
               type='checkbox'
@@ -465,54 +238,25 @@ export default function Editor() {
           <div className='flex justify-between gap-2'>
             <button
               className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-              onClick={async () => {
-                if (!excalidrawAPI) {
-                  return;
-                }
-                const svg = await exportToSvg({
-                  elements: excalidrawAPI?.getSceneElements(),
-                  appState: {
-                    ...initialData.appState,
-                    width: 300,
-                    height: 100,
-                  },
-                  files: excalidrawAPI?.getFiles(),
-                });
-              }}
+              onClick={handleExportToSVG}
             >
               Export to SVG
             </button>
 
             <button
               className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-              onClick={async () => {
-                if (!excalidrawAPI) {
-                  return;
-                }
-                const blob = await exportToBlob({
-                  elements: excalidrawAPI?.getSceneElements(),
-                  mimeType: "image/png",
-                  appState: {
-                    ...initialData.appState,
-                  },
-                  files: excalidrawAPI?.getFiles(),
-                });
-                setBlobUrl(window.URL.createObjectURL(blob));
-              }}
+              onClick={handleExportToBlob}
             >
               Export to Blob
             </button>
-          </div>
 
-          {/* <button className="" onClick={onCopy.bind(null, "png")}>
-            Copy to Clipboard as PNG
-          </button>
-          <button onClick={onCopy.bind(null, "svg")}>
-            Copy to Clipboard as SVG
-          </button>
-          <button onClick={onCopy.bind(null, "json")}>
-            Copy to Clipboard as JSON
-          </button> */}
+            <button
+              className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+              onClick={handleExportPDF}
+            >
+              Export to PDF
+            </button>
+          </div>
         </div>
       </div>
       <div className='excalidraw-wrapper'>
@@ -521,9 +265,6 @@ export default function Editor() {
             setExcalidrawAPI(api)
           }
           initialData={initialStatePromiseRef.current.promise}
-          onChange={(elements, state) => {
-            console.info("Elements :", elements, "State : ", state);
-          }}
           viewModeEnabled={viewModeEnabled}
           zenModeEnabled={zenModeEnabled}
           gridModeEnabled={gridModeEnabled}
@@ -532,14 +273,10 @@ export default function Editor() {
             canvasActions: { loadScene: false },
           }}
           onLinkOpen={onLinkOpen}
-          onPointerDown={onPointerDown}
-          onScrollChange={rerenderCommentIcons}
           theme={theme as Theme}
         >
-          {renderMenu()}
+          <RenderMenu />
         </Excalidraw>
-        {Object.keys(commentIcons || []).length > 0 && renderCommentIcons()}
-        {comment && renderComment()}
       </div>
     </div>
   );
