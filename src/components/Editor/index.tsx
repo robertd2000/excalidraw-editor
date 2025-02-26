@@ -21,7 +21,10 @@ import {
 
 import initialData from "./initialData";
 
-import { NonDeletedExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import {
+  NonDeletedExcalidrawElement,
+  Theme,
+} from "@excalidraw/excalidraw/types/element/types";
 import { nanoid } from "nanoid";
 import {
   resolvablePromise,
@@ -66,15 +69,12 @@ export default function Editor() {
   const [zenModeEnabled, setZenModeEnabled] = useState(false);
   const [gridModeEnabled, setGridModeEnabled] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string>("");
-  const [exportWithDarkMode, setExportWithDarkMode] = useState(false);
-  const [exportEmbedScene, setExportEmbedScene] = useState(false);
   const [theme, setTheme] = useState("light");
-  const [isCollaborating, setIsCollaborating] = useState(false);
   const [commentIcons, setCommentIcons] = useState<{ [id: string]: Comment }>(
     {}
   );
   const [comment, setComment] = useState<Comment | null>(null);
-
+  const isCollaborating = false;
   const initialStatePromiseRef = useRef<{
     promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
   }>({ promise: null! });
@@ -151,12 +151,6 @@ export default function Editor() {
     });
     window.alert(`Copied to clipboard as ${type} successfully`);
   };
-
-  const [pointerData, setPointerData] = useState<{
-    pointer: { x: number; y: number };
-    button: "down" | "up";
-    pointersMap: Gesture["pointers"];
-  } | null>(null);
 
   const onPointerDown = (
     activeTool: AppState["activeTool"],
@@ -399,62 +393,96 @@ export default function Editor() {
           <MainMenu.DefaultItems.Socials />
         </MainMenu.Group>
         <MainMenu.Separator />
-        <MainMenu.ItemCustom>
-          <button
-            style={{ height: "2rem" }}
-            onClick={() => window.alert("custom menu item")}
-          >
-            custom item
-          </button>
-        </MainMenu.ItemCustom>
         <MainMenu.DefaultItems.Help />
       </MainMenu>
     );
   };
+
   return (
     <div className='App' ref={appRef}>
-      <div className='button-wrapper'>
-        <label>
-          <input
-            type='checkbox'
-            checked={viewModeEnabled}
-            onChange={() => setViewModeEnabled(!viewModeEnabled)}
-          />
-          View mode
-        </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={zenModeEnabled}
-            onChange={() => setZenModeEnabled(!zenModeEnabled)}
-          />
-          Zen mode
-        </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={gridModeEnabled}
-            onChange={() => setGridModeEnabled(!gridModeEnabled)}
-          />
-          Grid mode
-        </label>
-        <label>
-          <input
-            type='checkbox'
-            checked={theme === "dark"}
-            onChange={() => {
-              let newTheme = "light";
-              if (theme === "light") {
-                newTheme = "dark";
-              }
-              setTheme(newTheme);
-            }}
-          />
-          Switch to Dark Theme
-        </label>
+      <div className='flex justify-between p-5'>
+        <div className='flex justify-between gap-2'>
+          <label className='flex justify-between gap-1 items-center'>
+            <input
+              type='checkbox'
+              checked={viewModeEnabled}
+              onChange={() => setViewModeEnabled(!viewModeEnabled)}
+            />
+            View mode
+          </label>
+          <label className='flex justify-between gap-1 items-center'>
+            <input
+              type='checkbox'
+              checked={zenModeEnabled}
+              onChange={() => setZenModeEnabled(!zenModeEnabled)}
+            />
+            Zen mode
+          </label>
+          <label className='flex justify-between gap-1 items-center'>
+            <input
+              type='checkbox'
+              checked={gridModeEnabled}
+              onChange={() => setGridModeEnabled(!gridModeEnabled)}
+            />
+            Grid mode
+          </label>
+          <label className='flex justify-between gap-1 items-center'>
+            <input
+              type='checkbox'
+              checked={theme === "dark"}
+              onChange={() => {
+                let newTheme = "light";
+                if (theme === "light") {
+                  newTheme = "dark";
+                }
+                setTheme(newTheme);
+              }}
+            />
+            Switch to Dark Theme
+          </label>
+        </div>
 
-        <div>
-          <button onClick={onCopy.bind(null, "png")}>
+        <div className='flex justify-between gap-2'>
+          <button
+            className='border-1 border-black p-2 rounded-md cursor-pointer'
+            onClick={async () => {
+              if (!excalidrawAPI) {
+                return;
+              }
+              const svg = await exportToSvg({
+                elements: excalidrawAPI?.getSceneElements(),
+                appState: {
+                  ...initialData.appState,
+                  width: 300,
+                  height: 100,
+                },
+                files: excalidrawAPI?.getFiles(),
+              });
+            }}
+          >
+            Export to SVG
+          </button>
+
+          <button
+            className='border-1 border-black p-2 rounded-md cursor-pointer'
+            onClick={async () => {
+              if (!excalidrawAPI) {
+                return;
+              }
+              const blob = await exportToBlob({
+                elements: excalidrawAPI?.getSceneElements(),
+                mimeType: "image/png",
+                appState: {
+                  ...initialData.appState,
+                },
+                files: excalidrawAPI?.getFiles(),
+              });
+              setBlobUrl(window.URL.createObjectURL(blob));
+            }}
+          >
+            Export to Blob
+          </button>
+          {/* <button className="" onClick={onCopy.bind(null, "png")}>
             Copy to Clipboard as PNG
           </button>
           <button onClick={onCopy.bind(null, "svg")}>
@@ -462,7 +490,7 @@ export default function Editor() {
           </button>
           <button onClick={onCopy.bind(null, "json")}>
             Copy to Clipboard as JSON
-          </button>
+          </button> */}
         </div>
       </div>
       <div className='excalidraw-wrapper'>
@@ -474,11 +502,6 @@ export default function Editor() {
           onChange={(elements, state) => {
             console.info("Elements :", elements, "State : ", state);
           }}
-          onPointerUpdate={(payload: {
-            pointer: { x: number; y: number };
-            button: "down" | "up";
-            pointersMap: Gesture["pointers"];
-          }) => setPointerData(payload)}
           viewModeEnabled={viewModeEnabled}
           zenModeEnabled={zenModeEnabled}
           gridModeEnabled={gridModeEnabled}
@@ -489,55 +512,12 @@ export default function Editor() {
           onLinkOpen={onLinkOpen}
           onPointerDown={onPointerDown}
           onScrollChange={rerenderCommentIcons}
+          theme={theme as Theme}
         >
           {renderMenu()}
         </Excalidraw>
         {Object.keys(commentIcons || []).length > 0 && renderCommentIcons()}
         {comment && renderComment()}
-      </div>
-
-      <div className='export-wrapper button-wrapper'>
-        <button
-          onClick={async () => {
-            if (!excalidrawAPI) {
-              return;
-            }
-            const svg = await exportToSvg({
-              elements: excalidrawAPI?.getSceneElements(),
-              appState: {
-                ...initialData.appState,
-                exportWithDarkMode,
-                exportEmbedScene,
-                width: 300,
-                height: 100,
-              },
-              files: excalidrawAPI?.getFiles(),
-            });
-          }}
-        >
-          Export to SVG
-        </button>
-
-        <button
-          onClick={async () => {
-            if (!excalidrawAPI) {
-              return;
-            }
-            const blob = await exportToBlob({
-              elements: excalidrawAPI?.getSceneElements(),
-              mimeType: "image/png",
-              appState: {
-                ...initialData.appState,
-                exportEmbedScene,
-                exportWithDarkMode,
-              },
-              files: excalidrawAPI?.getFiles(),
-            });
-            setBlobUrl(window.URL.createObjectURL(blob));
-          }}
-        >
-          Export to Blob
-        </button>
       </div>
     </div>
   );
