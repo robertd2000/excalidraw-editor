@@ -175,7 +175,7 @@ export default function Editor() {
     <div className='App' ref={appRef}>
       <div className='flex justify-between p-5 bg-indigo-300 items-center'>
         <div className='flex justify-between gap-2 items-center'>
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='view-checkbox'
               type='checkbox'
@@ -188,7 +188,7 @@ export default function Editor() {
             </label>
           </div>
 
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='zen-checkbox'
               type='checkbox'
@@ -201,7 +201,7 @@ export default function Editor() {
             </label>
           </div>
 
-          <div className='flex items-center mb-4'>
+          <div className='flex items-center'>
             <input
               id='grid-checkbox'
               type='checkbox'
