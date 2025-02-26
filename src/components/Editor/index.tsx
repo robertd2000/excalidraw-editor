@@ -512,6 +512,20 @@ export default function Editor() {
                   },
                   files: excalidrawAPI?.getFiles(),
                 });
+
+                const blob = new Blob([svg.outerHTML], {
+                  type: "image/svg+xml",
+                });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "excalidraw-export.svg";
+                document.body.appendChild(a);
+                a.click();
+
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
               }}
             >
               Export to SVG
