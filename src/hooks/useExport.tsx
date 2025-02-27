@@ -1,22 +1,12 @@
-import {
-  exportToBlob,
-  exportToCanvas,
-  exportToSvg,
-} from "@excalidraw/excalidraw";
+import { exportToBlob, exportToSvg } from "@excalidraw/excalidraw";
 import { useExcalidrawContext } from "../store/excalidraw";
 import initialData from "../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
-import { exportCanvasToPDF } from "../utils/canvas";
 import { transformExcalidrawToTemplate } from "../utils/transform";
-import {
-  Template,
-  Font,
-  checkTemplate,
-  getInputFromTemplate,
-  getDefaultFont,
-} from "@pdfme/common";
+import { getInputFromTemplate } from "@pdfme/common";
 import { generate } from "@pdfme/generator";
 import { getPlugins } from "../plugins";
+
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
 
