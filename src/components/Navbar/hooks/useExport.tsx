@@ -39,24 +39,21 @@ export function useExport() {
     // const svgElement = svgDoc.documentElement;
 
     const tempContainer = document.createElement("div");
-    tempContainer.style.position = "absolute"; // Прячем контейнер за пределами экрана
+    tempContainer.style.position = "absolute";
     tempContainer.style.left = "-9999px";
     document.body.appendChild(tempContainer);
 
-    // Вставляем SVG во временный контейнер
     tempContainer.appendChild(svg);
 
-    // Получаем SVG-элемент
     const svgElement = tempContainer.querySelector("svg");
 
-    // Use svg2pdf to convert SVG to PDF with correct function call
-    svg2pdf(svgElement, pdf, {
-      x: 0,
-      y: 0,
-    }).then(() => {
-      // Save PDF
-      pdf.save("vector-design.pdf");
-    });
+    if (svgElement)
+      svg2pdf(svgElement, pdf, {
+        x: 0,
+        y: 0,
+      }).then(() => {
+        pdf.save("vector-design.pdf");
+      });
   };
 
   const handleExportToSVG = async () => {
