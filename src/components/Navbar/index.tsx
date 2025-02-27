@@ -92,14 +92,14 @@ export function Navbar() {
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
             onClick={handleExportToBlob}
           >
-            Export to Blob
+            Export to PDF
           </button>
 
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
             onClick={handleExportPDF}
           >
-            Export to PDF
+            Export to Canvas
           </button>
         </div>
       </div>

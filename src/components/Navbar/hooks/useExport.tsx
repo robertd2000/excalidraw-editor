@@ -6,10 +6,6 @@ import {
 import { useExcalidrawContext } from "../../../store/excalidraw";
 import initialData from "../../../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../../../utils/blob";
-import { jsPDF } from "jspdf";
-import { svg2pdf } from "svg2pdf.js";
-import { PDFDocument } from "pdf-lib";
-import { getPathsFromSVG } from "../../../utils/svg";
 import { exportCanvasToPDF } from "../../../utils/canvas";
 
 export function useExport() {
