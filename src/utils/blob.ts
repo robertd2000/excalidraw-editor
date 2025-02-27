@@ -2,7 +2,7 @@ import { NonDeletedExcalidrawElement } from "@excalidraw/excalidraw/types/elemen
 import { jsPDF } from "jspdf";
 
 export const convertPngBlobToPdf = async (
-  pngBlob: Blob,
+  blob: Blob,
   {
     width,
     height,
@@ -12,16 +12,23 @@ export const convertPngBlobToPdf = async (
   }
 ) => {
   const reader = new FileReader();
-
   reader.onload = () => {
     const imageData = reader.result as string;
 
-    const pdf = new jsPDF();
-    pdf.addImage(imageData, "PNG", 10, 10, width, height);
-    pdf.save("excalidraw-export.pdf");
-  };
+    // Создаем PDF с динамическими размерами
+    const pdf = new jsPDF({
+      orientation: width > height ? "landscape" : "portrait",
+      unit: "px",
+      format: [width, height],
+    });
 
-  reader.readAsDataURL(pngBlob);
+    // Добавляем изображение в PDF
+    pdf.addImage(imageData, "PNG", 0, 0, width, height);
+
+    // Сохраняем PDF
+    pdf.save("drawing.pdf");
+  };
+  reader.readAsDataURL(blob);
 };
 
 export function getSceneBoundingBox(

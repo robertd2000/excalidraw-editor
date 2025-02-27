@@ -1,9 +1,16 @@
-import { exportToBlob, exportToSvg } from "@excalidraw/excalidraw";
+import {
+  exportToBlob,
+  exportToCanvas,
+  exportToSvg,
+} from "@excalidraw/excalidraw";
 import { useExcalidrawContext } from "../../../store/excalidraw";
 import initialData from "../../../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../../../utils/blob";
 import { jsPDF } from "jspdf";
 import { svg2pdf } from "svg2pdf.js";
+import { PDFDocument } from "pdf-lib";
+import { getPathsFromSVG } from "../../../utils/svg";
+import { exportCanvasToPDF } from "../../../utils/canvas";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
@@ -12,48 +19,47 @@ export function useExport() {
     if (!excalidrawAPI) return;
 
     const elements = excalidrawAPI.getSceneElements();
+    const files = excalidrawAPI.getFiles();
 
-    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    const svg = await exportToSvg({
-      elements: elements,
+    const canvas = await exportToCanvas({
+      elements,
       appState: {
-        ...initialData.appState,
-        width,
-        height,
-        exportBackground: false,
+        exportBackground: true,
+        exportScale: 4, // Увеличиваем масштаб для лучшего качества
       },
-      files: excalidrawAPI?.getFiles(),
+      files,
+      getDimensions: () => {
+        return { width: 500, height: 500, scale: 2 };
+      },
     });
+    exportCanvasToPDF(canvas, "excalidraw-export.pdf");
 
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: [width + 50, height + 50],
-    });
+    // const pdf = new jsPDF({
+    //   orientation: "landscape",
+    //   unit: "pt",
+    //   format: [width + 50, height + 50],
+    // });
 
-    // const parser = new DOMParser();
-    // const svgDoc = parser.parseFromString(svg.outerHTML, "image/svg+xml");
-    // const svgElement = svgDoc.documentElement;
+    // // const parser = new DOMParser();
+    // // const svgDoc = parser.parseFromString(svg.outerHTML, "image/svg+xml");
+    // // const svgElement = svgDoc.documentElement;
 
-    const tempContainer = document.createElement("div");
-    tempContainer.style.position = "absolute";
-    tempContainer.style.left = "-9999px";
-    document.body.appendChild(tempContainer);
+    // const tempContainer = document.createElement("div");
+    // tempContainer.style.position = "absolute";
+    // tempContainer.style.left = "-9999px";
+    // document.body.appendChild(tempContainer);
 
-    tempContainer.appendChild(svg);
+    // tempContainer.appendChild(svg);
 
-    const svgElement = tempContainer.querySelector("svg");
+    // const svgElement = tempContainer.querySelector("svg");
 
-    if (svgElement)
-      svg2pdf(svgElement, pdf, {
-        x: 0,
-        y: 0,
-      }).then(() => {
-        pdf.save("vector-design.pdf");
-      });
+    // if (svgElement)
+    //   svg2pdf(svgElement, pdf, {
+    //     x: 0,
+    //     y: 0,
+    //   }).then(() => {
+    //     pdf.save("vector-design.pdf");
+    //   });
   };
 
   const handleExportToSVG = async () => {
@@ -65,8 +71,8 @@ export function useExport() {
       elements: elements,
       appState: {
         ...initialData.appState,
-        width: 300,
-        height: 100,
+        // width: 300,
+        // height: 100,
         exportBackground: false,
       },
       files: excalidrawAPI?.getFiles(),
@@ -92,6 +98,10 @@ export function useExport() {
       return;
     }
     const elements = excalidrawAPI.getSceneElements();
+    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    const width = maxX - minX;
+    const height = maxY - minY;
+
     const blob = await exportToBlob({
       elements,
       mimeType: "image/png",
@@ -99,11 +109,12 @@ export function useExport() {
         ...initialData.appState,
         exportBackground: false,
       },
+      getDimensions: () => {
+        return { width: width * 4, height: height * 4, scale: 2 };
+      },
       files: excalidrawAPI?.getFiles(),
     });
-    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
-    const width = maxX - minX;
-    const height = maxY - minY;
+
     // setBlobUrl(window.URL.createObjectURL(blob));
     convertPngBlobToPdf(blob, { width, height });
   };
