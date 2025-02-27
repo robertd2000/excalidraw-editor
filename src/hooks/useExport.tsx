@@ -3,10 +3,10 @@ import {
   exportToCanvas,
   exportToSvg,
 } from "@excalidraw/excalidraw";
-import { useExcalidrawContext } from "../../../store/excalidraw";
-import initialData from "../../../constants/initialData";
-import { convertPngBlobToPdf, getSceneBoundingBox } from "../../../utils/blob";
-import { exportCanvasToPDF } from "../../../utils/canvas";
+import { useExcalidrawContext } from "../store/excalidraw";
+import initialData from "../constants/initialData";
+import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
+import { exportCanvasToPDF } from "../utils/canvas";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();

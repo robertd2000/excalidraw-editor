@@ -1,6 +1,6 @@
 import { Theme } from "@excalidraw/excalidraw/types/element/types";
 import { useSettingsContext } from "../../store/settings";
-import { useExport } from "./hooks/useExport";
+import { useExport } from "../../hooks/useExport";
 
 export function Navbar() {
   const {
