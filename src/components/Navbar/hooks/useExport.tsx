@@ -7,6 +7,10 @@ import { useExcalidrawContext } from "../../../store/excalidraw";
 import initialData from "../../../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../../../utils/blob";
 import { jsPDF } from "jspdf";
+import { generate } from "@pdfme/generator";
+import { BLANK_PDF } from "@pdfme/common";
+import { text, barcodes, image } from "@pdfme/schemas";
+import { PDFDocument } from "pdf-lib";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
@@ -21,35 +25,135 @@ export function useExport() {
     const width = maxX - minX;
     const height = maxY - minY;
 
-    // Экспортируем рисунок в PNG
+    // Увеличиваем масштаб для высокого разрешения
+    const exportScale = 3; // Увеличиваем в 3 раза
+
+    // Экспортируем рисунок в PNG с высоким разрешением
     const blob = await exportToBlob({
       elements,
       appState: {
         exportBackground: true,
-        exportScale: 3, // Увеличиваем масштаб для лучшего качества
+        exportScale: exportScale,
       },
       files: excalidrawAPI.getFiles(),
     });
 
-    // Преобразуем Blob в Data URL
-    const reader = new FileReader();
-    reader.onload = () => {
-      const imageData = reader.result as string;
+    // Преобразуем Blob в ArrayBuffer
+    const arrayBuffer = await blob.arrayBuffer();
 
-      // Создаем PDF с динамическими размерами
-      const pdf = new jsPDF({
-        orientation: width > height ? "landscape" : "portrait",
-        unit: "px",
-        format: [width, height],
-      });
+    // Создаем PDF с высоким DPI
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([width * exportScale, height * exportScale]);
 
-      // Добавляем изображение в PDF
-      pdf.addImage(imageData, "PNG", 0, 0, width, height);
+    // Вставляем изображение
+    const image = await pdfDoc.embedPng(arrayBuffer);
+    page.drawImage(image, {
+      x: 0,
+      y: 0,
+      width: width * exportScale,
+      height: height * exportScale,
+    });
 
-      // Сохраняем PDF
-      pdf.save("drawing.pdf");
-    };
-    reader.readAsDataURL(blob);
+    // Сохраняем PDF
+    const pdfBytes = await pdfDoc.save();
+    const blobPdf = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blobPdf);
+    link.download = "drawing-high-dpi.pdf";
+    link.click();
+
+    // const elements = excalidrawAPI.getSceneElements();
+
+    // // Вычисляем bounding box
+    // const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    // const width = maxX - minX;
+    // const height = maxY - minY;
+
+    // // Экспортируем рисунок в SVG
+    // const svg = await exportToSvg({
+    //   elements,
+    //   appState: {
+    //     exportBackground: true,
+    //   },
+    //   files: excalidrawAPI.getFiles(),
+    // });
+
+    // // Преобразуем SVG в Data URL
+    // const svgString = new XMLSerializer().serializeToString(svg);
+    // const svgDataUrl = `data:image/svg+xml;base64,${btoa(svgString)}`;
+
+    // // Создаем шаблон для PDF с динамическими размерами
+    // const template = {
+    //   basePdf: BLANK_PDF,
+    //   schemas: [
+    //     {
+    //       image: {
+    //         type: "image",
+    //         position: { x: 0, y: 0 },
+    //         width,
+    //         height,
+    //       },
+    //     },
+    //   ],
+    // };
+
+    // const plugins = {
+    //   "QR Code": barcodes.qrcode,
+    //   Image: image,
+    // };
+
+    // // Создаем PDF
+    // const inputs = [{ image: svgDataUrl }];
+    // const pdf = await generate({ template, inputs, plugins });
+
+    // // Сохраняем PDF
+    // const blob = new Blob([pdf.buffer], { type: "application/pdf" });
+    // const link = document.createElement("a");
+    // link.href = URL.createObjectURL(blob);
+    // link.download = "drawing-high-quality.pdf";
+    // link.click();
+
+    //
+
+    // const elements = excalidrawAPI.getSceneElements();
+
+    // // Вычисляем bounding box
+    // const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    // const width = maxX - minX;
+    // const height = maxY - minY;
+
+    // // Экспортируем рисунок в PNG
+    // const blob = await exportToBlob({
+    //   elements,
+    //   appState: {
+    //     exportBackground: true,
+    //     exportScale: 3, // Увеличиваем масштаб для лучшего качества
+    //   },
+    //   files: excalidrawAPI.getFiles(),
+    // });
+
+    // // Преобразуем Blob в Data URL
+    // const reader = new FileReader();
+    // reader.onload = () => {
+    //   const imageData = reader.result as string;
+
+    //   // Создаем PDF с динамическими размерами
+    //   const pdf = new jsPDF({
+    //     orientation: width > height ? "landscape" : "portrait",
+    //     unit: "px",
+    //     format: [width, height],
+    //   });
+
+    //   // Добавляем изображение в PDF
+    //   pdf.addImage(imageData, "PNG", 0, 0, width, height);
+
+    //   // Сохраняем PDF
+    //   pdf.save("drawing.pdf");
+    // };
+    // reader.readAsDataURL(blob);
+
+    //
+
     // const scaleFactor = 4;
 
     // const canvas = await exportToCanvas({
