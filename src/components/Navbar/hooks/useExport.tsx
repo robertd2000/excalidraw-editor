@@ -34,9 +34,20 @@ export function useExport() {
       format: [width + 50, height + 50],
     });
 
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svg.outerHTML, "image/svg+xml");
-    const svgElement = svgDoc.documentElement;
+    // const parser = new DOMParser();
+    // const svgDoc = parser.parseFromString(svg.outerHTML, "image/svg+xml");
+    // const svgElement = svgDoc.documentElement;
+
+    const tempContainer = document.createElement("div");
+    tempContainer.style.position = "absolute"; // Прячем контейнер за пределами экрана
+    tempContainer.style.left = "-9999px";
+    document.body.appendChild(tempContainer);
+
+    // Вставляем SVG во временный контейнер
+    tempContainer.appendChild(svg);
+
+    // Получаем SVG-элемент
+    const svgElement = tempContainer.querySelector("svg");
 
     // Use svg2pdf to convert SVG to PDF with correct function call
     svg2pdf(svgElement, pdf, {
