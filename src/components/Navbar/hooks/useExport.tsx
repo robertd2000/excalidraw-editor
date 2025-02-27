@@ -16,12 +16,14 @@ export function useExport() {
     const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
     const width = maxX - minX;
     const height = maxY - minY;
+
     const svg = await exportToSvg({
       elements: elements,
       appState: {
         ...initialData.appState,
         width,
         height,
+        exportBackground: false,
       },
       files: excalidrawAPI?.getFiles(),
     });
@@ -29,7 +31,7 @@ export function useExport() {
     const pdf = new jsPDF({
       orientation: "landscape",
       unit: "pt",
-      format: [width + 30, height + 30],
+      format: [width + 50, height + 50],
     });
 
     const parser = new DOMParser();
