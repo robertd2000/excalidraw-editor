@@ -67,6 +67,7 @@ export function useExport() {
         ...initialData.appState,
         width: 300,
         height: 100,
+        exportBackground: false,
       },
       files: excalidrawAPI?.getFiles(),
     });
@@ -96,6 +97,7 @@ export function useExport() {
       mimeType: "image/png",
       appState: {
         ...initialData.appState,
+        exportBackground: false,
       },
       files: excalidrawAPI?.getFiles(),
     });
