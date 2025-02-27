@@ -7,7 +7,16 @@ import { useExcalidrawContext } from "../store/excalidraw";
 import initialData from "../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
 import { exportCanvasToPDF } from "../utils/canvas";
-
+import { transformExcalidrawToTemplate } from "../utils/transform";
+import {
+  Template,
+  Font,
+  checkTemplate,
+  getInputFromTemplate,
+  getDefaultFont,
+} from "@pdfme/common";
+import { generate } from "@pdfme/generator";
+import { getPlugins } from "../plugins";
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
 
@@ -15,20 +24,41 @@ export function useExport() {
     if (!excalidrawAPI) return;
 
     const elements = excalidrawAPI.getSceneElements();
-    const files = excalidrawAPI.getFiles();
+    const template = transformExcalidrawToTemplate(elements);
 
-    const canvas = await exportToCanvas({
-      elements,
-      appState: {
-        exportBackground: true,
-        exportScale: 4, // Увеличиваем масштаб для лучшего качества
+    console.log(elements);
+    const inputs = getInputFromTemplate(template);
+
+    console.log("template", template, inputs);
+
+    const pdf = await generate({
+      template,
+      inputs,
+      options: {
+        title: "pdfme",
       },
-      files,
-      getDimensions: () => {
-        return { width: 500, height: 500, scale: 2 };
-      },
+      plugins: getPlugins(),
     });
-    exportCanvasToPDF(canvas, "excalidraw-export.pdf");
+
+    const blob = new Blob([pdf.buffer], { type: "application/pdf" });
+    window.open(URL.createObjectURL(blob));
+
+    //
+
+    // const files = excalidrawAPI.getFiles();
+
+    // const canvas = await exportToCanvas({
+    //   elements,
+    //   appState: {
+    //     exportBackground: true,
+    //     exportScale: 4, // Увеличиваем масштаб для лучшего качества
+    //   },
+    //   files,
+    //   getDimensions: () => {
+    //     return { width: 500, height: 500, scale: 2 };
+    //   },
+    // });
+    // exportCanvasToPDF(canvas, "excalidraw-export.pdf");
 
     // const pdf = new jsPDF({
     //   orientation: "landscape",
