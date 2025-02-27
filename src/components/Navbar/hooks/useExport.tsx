@@ -5,46 +5,85 @@ import {
 } from "@excalidraw/excalidraw";
 import { useExcalidrawContext } from "../../../store/excalidraw";
 import initialData from "../../../constants/initialData";
-import { convertPngBlobToPdf } from "../../../utils/blob";
+import { convertPngBlobToPdf, getSceneBoundingBox } from "../../../utils/blob";
 import { jsPDF } from "jspdf";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
 
   const handleExportPDF = async () => {
-    const scaleFactor = 4;
+    if (!excalidrawAPI) return;
 
-    const canvas = await exportToCanvas({
-      elements: excalidrawAPI?.getSceneElements()!,
+    const elements = excalidrawAPI.getSceneElements();
+
+    // Вычисляем bounding box
+    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    // Экспортируем рисунок в PNG
+    const blob = await exportToBlob({
+      elements,
       appState: {
-        ...initialData.appState,
-        exportScale: scaleFactor,
+        exportBackground: true,
+        exportScale: 3, // Увеличиваем масштаб для лучшего качества
       },
-      files: excalidrawAPI?.getFiles()!,
+      files: excalidrawAPI.getFiles(),
     });
-    const pdf = new jsPDF("p", "mm", "a4");
 
-    const imgWidth = 190;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Преобразуем Blob в Data URL
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageData = reader.result as string;
 
-    pdf.addImage(
-      canvas.toDataURL("image/png", 1.0),
-      "PNG",
-      10,
-      10,
-      imgWidth,
-      imgHeight
-    );
+      // Создаем PDF с динамическими размерами
+      const pdf = new jsPDF({
+        orientation: width > height ? "landscape" : "portrait",
+        unit: "px",
+        format: [width, height],
+      });
 
-    pdf.save("canvas-export.pdf");
+      // Добавляем изображение в PDF
+      pdf.addImage(imageData, "PNG", 0, 0, width, height);
+
+      // Сохраняем PDF
+      pdf.save("drawing.pdf");
+    };
+    reader.readAsDataURL(blob);
+    // const scaleFactor = 4;
+
+    // const canvas = await exportToCanvas({
+    //   elements: excalidrawAPI?.getSceneElements()!,
+    //   appState: {
+    //     ...initialData.appState,
+    //     exportScale: scaleFactor,
+    //   },
+    //   files: excalidrawAPI?.getFiles()!,
+    // });
+    // const pdf = new jsPDF("p", "mm", "a4");
+
+    // const imgWidth = 190;
+    // const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // pdf.addImage(
+    //   canvas.toDataURL("image/png", 1.0),
+    //   "PNG",
+    //   10,
+    //   10,
+    //   imgWidth,
+    //   imgHeight
+    // );
+
+    // pdf.save("canvas-export.pdf");
   };
 
   const handleExportToSVG = async () => {
     if (!excalidrawAPI) {
       return;
     }
+    const elements = excalidrawAPI.getSceneElements();
     const svg = await exportToSvg({
-      elements: excalidrawAPI?.getSceneElements(),
+      elements: elements,
       appState: {
         ...initialData.appState,
         width: 300,
@@ -72,16 +111,20 @@ export function useExport() {
     if (!excalidrawAPI) {
       return;
     }
+    const elements = excalidrawAPI.getSceneElements();
     const blob = await exportToBlob({
-      elements: excalidrawAPI?.getSceneElements(),
+      elements,
       mimeType: "image/png",
       appState: {
         ...initialData.appState,
       },
       files: excalidrawAPI?.getFiles(),
     });
+    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    const width = maxX - minX;
+    const height = maxY - minY;
     // setBlobUrl(window.URL.createObjectURL(blob));
-    convertPngBlobToPdf(blob);
+    convertPngBlobToPdf(blob, { width, height });
   };
 
   return {
