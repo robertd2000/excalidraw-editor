@@ -11,6 +11,7 @@ import { generate } from "@pdfme/generator";
 import { BLANK_PDF } from "@pdfme/common";
 import { text, barcodes, image } from "@pdfme/schemas";
 import { PDFDocument } from "pdf-lib";
+import { getPathsFromSVG } from "../../../utils/svg";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
@@ -19,48 +20,72 @@ export function useExport() {
     if (!excalidrawAPI) return;
 
     const elements = excalidrawAPI.getSceneElements();
-
-    // Вычисляем bounding box
-    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
-    const width = maxX - minX;
-    const height = maxY - minY;
-
-    // Увеличиваем масштаб для высокого разрешения
-    const exportScale = 3; // Увеличиваем в 3 раза
-
-    // Экспортируем рисунок в PNG с высоким разрешением
-    const blob = await exportToBlob({
-      elements,
+    const svg = await exportToSvg({
+      elements: elements,
       appState: {
-        exportBackground: true,
-        exportScale: exportScale,
+        ...initialData.appState,
+        width: 300,
+        height: 100,
       },
-      files: excalidrawAPI.getFiles(),
+      files: excalidrawAPI?.getFiles(),
     });
 
-    // Преобразуем Blob в ArrayBuffer
-    const arrayBuffer = await blob.arrayBuffer();
-
-    // Создаем PDF с высоким DPI
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([width * exportScale, height * exportScale]);
+    const page = pdfDoc.addPage();
 
-    // Вставляем изображение
-    const image = await pdfDoc.embedPng(arrayBuffer);
-    page.drawImage(image, {
-      x: 0,
-      y: 0,
-      width: width * exportScale,
-      height: height * exportScale,
-    });
+    const svgPath = getPathsFromSVG(svg);
+    page.drawSvgPath(svgPath, { scale: 0.5 });
 
-    // Сохраняем PDF
+    // Serialize the PDFDocument to bytes (a Uint8Array)
     const pdfBytes = await pdfDoc.save();
     const blobPdf = new Blob([pdfBytes], { type: "application/pdf" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blobPdf);
     link.download = "drawing-high-dpi.pdf";
     link.click();
+    // const elements = excalidrawAPI.getSceneElements();
+
+    // // Вычисляем bounding box
+    // const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    // const width = maxX - minX;
+    // const height = maxY - minY;
+
+    // // Увеличиваем масштаб для высокого разрешения
+    // const exportScale = 3; // Увеличиваем в 3 раза
+
+    // // Экспортируем рисунок в PNG с высоким разрешением
+    // const blob = await exportToBlob({
+    //   elements,
+    //   appState: {
+    //     exportBackground: true,
+    //     exportScale: exportScale,
+    //   },
+    //   files: excalidrawAPI.getFiles(),
+    // });
+
+    // // Преобразуем Blob в ArrayBuffer
+    // const arrayBuffer = await blob.arrayBuffer();
+
+    // // Создаем PDF с высоким DPI
+    // const pdfDoc = await PDFDocument.create();
+    // const page = pdfDoc.addPage([width * exportScale, height * exportScale]);
+
+    // // Вставляем изображение
+    // const image = await pdfDoc.embedPng(arrayBuffer);
+    // page.drawImage(image, {
+    //   x: 0,
+    //   y: 0,
+    //   width: width * exportScale,
+    //   height: height * exportScale,
+    // });
+
+    // // Сохраняем PDF
+    // const pdfBytes = await pdfDoc.save();
+    // const blobPdf = new Blob([pdfBytes], { type: "application/pdf" });
+    // const link = document.createElement("a");
+    // link.href = URL.createObjectURL(blobPdf);
+    // link.download = "drawing-high-dpi.pdf";
+    // link.click();
 
     // const elements = excalidrawAPI.getSceneElements();
 
