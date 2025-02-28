@@ -8,8 +8,7 @@ export function Navbar() {
     settings: { viewMode, zenMode, gridMode, theme },
   } = useSettingsContext();
 
-  const { handleExportToBlob, handleExportPDF, handleExportToSVG } =
-    useExport();
+  const { handleExportToBlob, handleExportToSVG } = useExport();
 
   return (
     <div className='flex justify-between p-5 bg-indigo-300 items-center'>
@@ -93,13 +92,6 @@ export function Navbar() {
             onClick={handleExportToBlob}
           >
             Export as Image
-          </button>
-
-          <button
-            className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
-            onClick={handleExportPDF}
-          >
-            Export as Canvas
           </button>
         </div>
       </div>
