@@ -15,9 +15,11 @@ import {
   checkbox,
   radioGroup,
 } from "@pdfme/schemas";
+import { signature } from "./signature";
 
 export const getPlugins = () => {
   return {
+    Signature: signature,
     Text: text,
     "Multi-Variable Text": multiVariableText,
     Table: table,

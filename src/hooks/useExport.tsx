@@ -3,7 +3,7 @@ import { useExcalidrawContext } from "../store/excalidraw";
 import initialData from "../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
 import { transformExcalidrawToTemplate } from "../utils/transform";
-import { getInputFromTemplate } from "@pdfme/common";
+import { BLANK_PDF, getInputFromTemplate, Template } from "@pdfme/common";
 import { generate } from "@pdfme/generator";
 import { getPlugins } from "../plugins";
 
@@ -14,6 +14,7 @@ export function useExport() {
     if (!excalidrawAPI) return;
 
     const elements = excalidrawAPI.getSceneElements();
+
     const template = transformExcalidrawToTemplate(elements);
 
     console.log(elements);
@@ -114,9 +115,9 @@ export function useExport() {
       return;
     }
     const elements = excalidrawAPI.getSceneElements();
-    const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
-    const width = maxX - minX;
-    const height = maxY - minY;
+    // const { minX, minY, maxX, maxY } = getSceneBoundingBox(elements);
+    const width = 595; // maxX - minX;
+    const height = 842; // maxY - minY;
 
     const blob = await exportToBlob({
       elements,
