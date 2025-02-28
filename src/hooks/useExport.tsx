@@ -7,6 +7,7 @@ import { useExcalidrawContext } from "../store/excalidraw";
 import initialData from "../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
 import { exportCanvasToPDF } from "../utils/canvas";
+import { exportSVGToPDF } from "../utils/svg";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
@@ -87,6 +88,10 @@ export function useExport() {
 
     URL.revokeObjectURL(url);
     document.body.removeChild(a);
+
+    const svgString = new XMLSerializer().serializeToString(svg);
+
+    await exportSVGToPDF(svgString, "vector-drawing.pdf");
   };
 
   const handleExportToBlob = async () => {
