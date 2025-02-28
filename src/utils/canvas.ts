@@ -9,7 +9,7 @@ export function exportCanvasToPDF(
   const pdf = new jsPDF({
     orientation: "landscape",
     unit: "px",
-    format: [canvas.width, canvas.height],
+    format: [600, 900],
   });
 
   pdf.addImage(imageData, "PNG", 0, 0, canvas.width, canvas.height);

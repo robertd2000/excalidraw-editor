@@ -85,21 +85,21 @@ export function Navbar() {
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
             onClick={handleExportToSVG}
           >
-            Export to SVG
+            Export as Vector
           </button>
 
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
             onClick={handleExportToBlob}
           >
-            Export to PDF
+            Export as Image
           </button>
 
           <button
             className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
             onClick={handleExportPDF}
           >
-            Export to Canvas
+            Export as Canvas
           </button>
         </div>
       </div>
