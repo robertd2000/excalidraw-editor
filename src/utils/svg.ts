@@ -1,19 +1,9 @@
-import { PDFDocument } from "pdf-lib";
-import SVGtoPDF from "svg-to-pdfkit";
 import { svg2pdf } from "svg2pdf.js";
 import { jsPDF } from "jspdf";
 
-/**
- * Extracts all path data from an SVG element as a single string.
- *
- * @param svgElement - The SVG element to extract path data from.
- * @returns A string containing all the path data from the SVG element.
- */
 export function getPathsFromSVG(svgElement: SVGSVGElement) {
-  // Находим все элементы <path> внутри SVG
   const paths = svgElement.querySelectorAll("path");
 
-  // Извлекаем атрибут `d` из каждого <path>
   const pathData: string[] = [];
   paths.forEach((path) => {
     const d = path.getAttribute("d");
@@ -50,9 +40,11 @@ export async function exportSVGToPDF(
   svgString: string,
   filename: string = "vector-drawing.pdf"
 ) {
+  const updatedSvgString = replaceSymbolsWithImages(svgString);
+
   // Создаем контейнер для SVG
   const svgContainer = document.createElement("div");
-  svgContainer.innerHTML = svgString;
+  svgContainer.innerHTML = updatedSvgString;
   document.body.appendChild(svgContainer);
 
   // Получаем элемент SVG
@@ -66,8 +58,11 @@ export async function exportSVGToPDF(
   const pdf = new jsPDF({
     orientation: "landscape",
     unit: "pt",
-    format: [1200, 800],
-    // format: [svgElement.width.baseVal.value, svgElement.height.baseVal.value],
+    // format: [1200, 800],
+    format: [
+      svgElement.width.baseVal.value * 2,
+      svgElement.height.baseVal.value * 2,
+    ],
   });
 
   // Преобразуем SVG в PDF
@@ -76,11 +71,48 @@ export async function exportSVGToPDF(
     y: 0,
   });
 
-  // Сохраняем PDF
   pdf.save(filename);
 
-  // Удаляем контейнер
   document.body.removeChild(svgContainer);
 }
 
-export function exportSvgToPDF(svgElement: SVGSVGElement) {}
+function replaceSymbolsWithImages(svgString: string): string {
+  const parser = new DOMParser();
+  const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
+
+  const styleElements = svgDoc.querySelectorAll("style");
+  styleElements.forEach((style) => {
+    let styleContent = style.textContent || "";
+    styleContent = styleContent.replace(/@import url\(.*?\);/g, "");
+    style.textContent = styleContent;
+  });
+
+  const symbols = svgDoc.querySelectorAll("symbol");
+  symbols.forEach((symbol) => {
+    const symbolId = symbol.getAttribute("id");
+    const uses = svgDoc.querySelectorAll(`use[href="#${symbolId}"]`);
+    uses.forEach((use) => {
+      const x = use.getAttribute("x") || "0";
+      const y = use.getAttribute("y") || "0";
+      const width = use.getAttribute("width") || "100%";
+      const height = use.getAttribute("height") || "100%";
+      const image = symbol.querySelector("image");
+      if (image) {
+        const newImage = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "image"
+        );
+        newImage.setAttribute("x", x);
+        newImage.setAttribute("y", y);
+        newImage.setAttribute("width", width);
+        newImage.setAttribute("height", height);
+        newImage.setAttribute("href", image.getAttribute("href") || "");
+        use.replaceWith(newImage);
+      }
+    });
+    symbol.remove();
+  });
+
+  const serializer = new XMLSerializer();
+  return serializer.serializeToString(svgDoc);
+}
