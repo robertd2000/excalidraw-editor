@@ -21,13 +21,10 @@ export function getPathsFromSVG(svgElement: SVGSVGElement) {
 // ) {
 //   const pdfDoc = await PDFDocument.create();
 
-//   // Добавляем страницу
 //   const page = pdfDoc.addPage([600, 400]);
 
-//   // Преобразуем SVG в PDF
 //   SVGtoPDF(page, svgString, 0, 0, { width: 600, height: 400 }); // Укажите размеры
 
-//   // Сохраняем PDF
 //   const pdfBytes = await pdfDoc.save();
 //   const blob = new Blob([pdfBytes], { type: "application/pdf" });
 //   const link = document.createElement("a");
@@ -42,12 +39,10 @@ export async function exportSVGToPDF(
 ) {
   const updatedSvgString = replaceSymbolsWithImages(svgString);
 
-  // Создаем контейнер для SVG
   const svgContainer = document.createElement("div");
   svgContainer.innerHTML = updatedSvgString;
   document.body.appendChild(svgContainer);
 
-  // Получаем элемент SVG
   const svgElement = svgContainer.querySelector("svg");
 
   if (!svgElement) {
@@ -65,7 +60,6 @@ export async function exportSVGToPDF(
     ],
   });
 
-  // Преобразуем SVG в PDF
   await svg2pdf(svgElement, pdf, {
     x: 0,
     y: 0,
