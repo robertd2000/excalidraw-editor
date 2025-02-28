@@ -7,7 +7,7 @@ import { useExcalidrawContext } from "../store/excalidraw";
 import initialData from "../constants/initialData";
 import { convertPngBlobToPdf, getSceneBoundingBox } from "../utils/blob";
 import { exportCanvasToPDF } from "../utils/canvas";
-import { exportSVGToPDF } from "../utils/svg";
+import { embedFontsInSVG, exportSVGToPDF } from "../utils/svg";
 
 export function useExport() {
   const { excalidrawAPI } = useExcalidrawContext();
@@ -74,8 +74,9 @@ export function useExport() {
       },
       files: excalidrawAPI?.getFiles(),
     });
+    const svgWithEmbeddedFonts = await embedFontsInSVG(svg.outerHTML);
 
-    const blob = new Blob([svg.outerHTML], {
+    const blob = new Blob([svgWithEmbeddedFonts], {
       type: "image/svg+xml",
     });
     const url = URL.createObjectURL(blob);
@@ -89,9 +90,9 @@ export function useExport() {
     URL.revokeObjectURL(url);
     document.body.removeChild(a);
 
-    const svgString = new XMLSerializer().serializeToString(svg);
+    // const svgString = new XMLSerializer().serializeToString(svg);
 
-    await exportSVGToPDF(svgString, "vector-drawing.pdf");
+    await exportSVGToPDF(svgWithEmbeddedFonts, "vector-drawing.pdf");
   };
 
   const handleExportToBlob = async () => {
