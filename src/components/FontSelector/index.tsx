@@ -1,24 +1,11 @@
 import React from "react";
+import { fonts } from "../../constants/fonts";
 
-const fonts = [
-  { name: "Virgil", value: "Virgil" },
-  { name: "Helvetica", value: "Helvetica" },
-  { name: "Cascadia", value: "Cascadia" },
-  { name: "Arial", value: "Arial" },
-  { name: "Times New Roman", value: "Times New Roman" },
-  { name: "Georgia", value: "Georgia" },
-  { name: "Roboto", value: "Roboto" },
-  { name: "Open Sans", value: "Open Sans" },
-  { name: "Lato", value: "Lato" },
-  { name: "Montserrat", value: "Montserrat" },
-  { name: "Poppins", value: "Poppins" },
-  { name: "Adobe Garamond", value: "Adobe Garamond" },
-  { name: "Adobe Caslon", value: "Adobe Caslon" },
-  { name: "Courier New", value: "Courier New" },
-  { name: "Comic Sans MS", value: "Comic Sans MS" },
-];
+interface FontSelectorProps {
+  onChange: (fontFamily: string) => void;
+}
 
-const FontSelector = ({ onChange }) => {
+const FontSelector: React.FC<FontSelectorProps> = ({ onChange }) => {
   return (
     <select
       onChange={(e) => onChange(e.target.value)}
