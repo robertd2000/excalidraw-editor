@@ -73,11 +73,29 @@ export function useEditor() {
     []
   );
 
+  const handleFontChange = useCallback(
+    (fontFamily: string) => {
+      if (!excalidrawAPI) return;
+
+      const elements = excalidrawAPI.getSceneElements();
+      const updatedElements = elements.map((element: any) => {
+        if (element.type === "text") {
+          return { ...element, fontFamily };
+        }
+        return element;
+      });
+
+      excalidrawAPI.updateScene({ elements: updatedElements });
+    },
+    [excalidrawAPI]
+  );
+
   return {
     appRef,
     initialStatePromiseRef,
     excalidrawAPI,
     setExcalidrawAPI,
     onLinkOpen,
+    handleFontChange,
   };
 }
