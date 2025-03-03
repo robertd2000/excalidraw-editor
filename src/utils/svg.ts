@@ -1,9 +1,9 @@
 import { svg2pdf } from "svg2pdf.js";
 import { jsPDF } from "jspdf";
 
-import { Cascadia } from "../assets/fonts/Cascadia-normal.js";
-import { Virgil } from "../assets/fonts/Virgil-normal.js";
-import { Assistant } from "../assets/fonts/Assistant-Regular-normal.js";
+import { Cascadia } from "../assets/fonts/Cascadia-normal";
+import { Virgil } from "../assets/fonts/Virgil-normal";
+import { Assistant } from "../assets/fonts/Assistant-Regular-normal";
 
 export function getPathsFromSVG(svgElement: SVGSVGElement) {
   const paths = svgElement.querySelectorAll("path");
