@@ -4,7 +4,6 @@ import { Theme } from "@excalidraw/excalidraw/types/element/types";
 import { RenderMenu } from "../RenderMenu";
 import { useSettingsContext } from "../../store/settings";
 import { useEditor } from "./hooks/useEditor";
-import FontSelector from "../FontSelector";
 
 declare global {
   interface Window {
@@ -17,19 +16,11 @@ export default function Editor() {
     settings: { viewMode, zenMode, gridMode, theme },
   } = useSettingsContext();
 
-  const {
-    appRef,
-    initialStatePromiseRef,
-    setExcalidrawAPI,
-    onLinkOpen,
-    handleFontChange,
-  } = useEditor();
+  const { appRef, initialStatePromiseRef, setExcalidrawAPI, onLinkOpen } =
+    useEditor();
 
   return (
     <div className='App' ref={appRef}>
-      <div className='p-4 bg-gray-100 border-b'>
-        <FontSelector onChange={handleFontChange} />
-      </div>
       <div className='excalidraw-wrapper'>
         <Excalidraw
           excalidrawAPI={(api: ExcalidrawImperativeAPI) =>
