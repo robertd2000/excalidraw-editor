@@ -74,13 +74,24 @@ export function useEditor() {
   );
 
   const handleFontChange = useCallback(
-    (fontFamily: string) => {
+    (settings: {
+      fontFamily: string;
+      fontSize: number;
+      lineHeight: number;
+    }) => {
       if (!excalidrawAPI) return;
 
       const elements = excalidrawAPI.getSceneElements();
+      const selectedIds = excalidrawAPI.getAppState().selectedElementIds;
+
       const updatedElements = elements.map((element: any) => {
-        if (element.type === "text") {
-          return { ...element, fontFamily };
+        if (element.type === "text" && selectedIds[element.id]) {
+          return {
+            ...element,
+            fontFamily: settings.fontFamily,
+            fontSize: settings.fontSize,
+            lineHeight: settings.lineHeight,
+          };
         }
         return element;
       });
