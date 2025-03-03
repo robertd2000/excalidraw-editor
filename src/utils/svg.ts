@@ -1,12 +1,9 @@
 import { svg2pdf } from "svg2pdf.js";
 import { jsPDF } from "jspdf";
 
-import Cascadia from "../assets/fonts/Cascadia.ttf";
-import Assistant from "../assets/fonts/Assistant-Regular.ttf";
-
-const Virgil = await fetch("../assets/fonts/Virgil.ttf").then((res) =>
-  res.arrayBuffer()
-);
+import { Cascadia } from "../assets/fonts/Cascadia-normal.js";
+import { Virgil } from "../assets/fonts/Virgil-normal.js";
+import { Assistant } from "../assets/fonts/Assistant-Regular-normal.js";
 
 export function getPathsFromSVG(svgElement: SVGSVGElement) {
   const paths = svgElement.querySelectorAll("path");
@@ -49,20 +46,14 @@ export async function exportSVGToPDF(
     ],
   });
 
-  console.log("arrayBufferToBase64(Virgil)", arrayBufferToBase64(Virgil));
-
-  pdf.addFileToVFS("Virgil.ttf", arrayBufferToBase64(Virgil));
+  pdf.addFileToVFS("Virgil.ttf", Virgil);
   pdf.addFont("Virgil.ttf", "Virgil", "normal");
-  // pdf.addFont("Virgil.ttf", "Virgil", "bold");
-  // pdf.addFont("Virgil.ttf", "Virgil", "italic");
-  // pdf.addFont("Virgil.ttf", "Virgil", "bolditalic");
-  // pdf.addFileToVFS("Cascadia.ttf", Cascadia);
-  // pdf.addFont("Cascadia.ttf", "Cascadia", "normal");
-  // pdf.addFileToVFS("Assistant-Regular.ttf", Assistant);
-  // pdf.addFont("Assistant-Regular.ttf", "Assistant", "normal");
-  pdf.setFont("Virgil");
 
-  console.log(pdf.getFontList());
+  pdf.addFileToVFS("Cascadia.ttf", Cascadia);
+  pdf.addFont("Cascadia.ttf", "Cascadia", "normal");
+
+  pdf.addFileToVFS("Assistant-Regular.ttf", Assistant);
+  pdf.addFont("Assistant-Regular.ttf", "Assistant", "normal");
 
   await svg2pdf(svgElement, pdf, {
     x: 0,
