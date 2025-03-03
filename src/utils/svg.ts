@@ -106,21 +106,6 @@ function replaceSymbolsWithImages(svgString: string): string {
   return serializer.serializeToString(svgDoc);
 }
 
-function fixExcalidrawFontUrls(
-  svgString: string,
-  version: string = "0.17.6"
-): string {
-  const regex =
-    /https:\/\/unpkg\.com\/@excalidraw\/excalidraw@undefined\/dist\/excalidraw-assets\/([^"]+)/g;
-
-  const fixedSvgString = svgString.replace(
-    regex,
-    `https://unpkg.com/@excalidraw/excalidraw@${version}/dist/excalidraw-assets/$1`
-  );
-
-  return fixedSvgString;
-}
-
 export async function embedFontsInSVG(svgString: string): Promise<string> {
   const fonts = {
     Virgil:
@@ -147,13 +132,4 @@ export async function embedFontsInSVG(svgString: string): Promise<string> {
     );
 
   return fixedSvgString;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
 }
