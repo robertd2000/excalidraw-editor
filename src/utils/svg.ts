@@ -1,6 +1,10 @@
 import { svg2pdf } from "svg2pdf.js";
 import { jsPDF } from "jspdf";
 
+import { Cascadia } from "../assets/fonts/Cascadia-normal";
+import { Virgil } from "../assets/fonts/Virgil-normal";
+import { Assistant } from "../assets/fonts/Assistant-Regular-normal";
+
 export function getPathsFromSVG(svgElement: SVGSVGElement) {
   const paths = svgElement.querySelectorAll("path");
 
@@ -19,9 +23,7 @@ export async function exportSVGToPDF(
   svgString: string,
   filename: string = "vector-drawing.pdf"
 ) {
-  const updatedSvgString = fixExcalidrawFontUrls(svgString);
-  const updatedFontSvgString = replaceSymbolsWithImages(updatedSvgString);
-  // const svgWithEmbeddedFonts = await embedFontsInSVG(updatedFontSvgString);
+  const updatedFontSvgString = replaceSymbolsWithImages(svgString);
 
   const svgContainer = document.createElement("div");
   svgContainer.innerHTML = updatedFontSvgString;
@@ -43,6 +45,15 @@ export async function exportSVGToPDF(
       svgElement.height.baseVal.value * 2,
     ],
   });
+
+  pdf.addFileToVFS("Virgil.ttf", Virgil);
+  pdf.addFont("Virgil.ttf", "Virgil", "normal");
+
+  pdf.addFileToVFS("Cascadia.ttf", Cascadia);
+  pdf.addFont("Cascadia.ttf", "Cascadia", "normal");
+
+  pdf.addFileToVFS("Assistant-Regular.ttf", Assistant);
+  pdf.addFont("Assistant-Regular.ttf", "Assistant", "normal");
 
   await svg2pdf(svgElement, pdf, {
     x: 0,
@@ -136,4 +147,13 @@ export async function embedFontsInSVG(svgString: string): Promise<string> {
     );
 
   return fixedSvgString;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
 }
