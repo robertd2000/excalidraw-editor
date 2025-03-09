@@ -12,7 +12,7 @@ import {resolvablePromise} from "../../../utils";
 import initialData from "../../../constants/initialData";
 
 export function useEditor() {
-    const appRef = useRef<React.Ref<HTMLDivElement>>(null);
+    const appRef = useRef<HTMLDivElement>(null);
 
     const initialStatePromiseRef = useRef<{
         promise: ResolvablePromise<ExcalidrawInitialDataState | null>;
