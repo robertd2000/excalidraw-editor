@@ -51,7 +51,7 @@ export function useEditor() {
                 excalidrawAPI.addFiles(imagesArray);
             };
         };
-        fetchData()
+        fetchData().then()
     }, [excalidrawAPI]);
 
     const onLinkOpen = useCallback(
@@ -78,7 +78,7 @@ export function useEditor() {
         appRef,
         initialStatePromiseRef,
         excalidrawAPI,
-        setExcalidrawAPI,
         onLinkOpen,
+        setExcalidrawAPI,
     };
 }
