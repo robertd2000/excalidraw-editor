@@ -11,7 +11,7 @@ export function Navbar() {
   const { handleExportToBlob, handleExportToSVG } = useExport();
 
   return (
-    <div className='flex justify-between p-5 bg-indigo-300 items-center'>
+    <div className='flex justify-between p-3 bg-indigo-300 items-center'>
       <div className='flex justify-between gap-2 items-center'>
         <div className='flex items-center'>
           <input
@@ -81,14 +81,14 @@ export function Navbar() {
 
         <div className='flex justify-between gap-2'>
           <button
-            className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+            className='border-1 border-black p-1 rounded-md cursor-pointer bg-white'
             onClick={handleExportToSVG}
           >
             Export as Vector
           </button>
 
           <button
-            className='border-1 border-black p-2 rounded-md cursor-pointer bg-white'
+            className='border-1 border-black p-1 rounded-md cursor-pointer bg-white'
             onClick={handleExportToBlob}
           >
             Export as Image
