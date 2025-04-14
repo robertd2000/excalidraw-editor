@@ -21,7 +21,7 @@ export default function Editor() {
 
     return (
         <div className='App' ref={appRef}>
-            <div className='excalidraw-wrapper'>
+            <div className={`excalidraw-wrapper ${theme === 'dark' ? 'bg-zinc-900' : ''}`}>
                 <Excalidraw
                     excalidrawAPI={(api: ExcalidrawImperativeAPI) =>
                         setExcalidrawAPI(api)
