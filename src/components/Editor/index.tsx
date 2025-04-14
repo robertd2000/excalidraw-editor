@@ -26,7 +26,13 @@ export default function Editor() {
                     excalidrawAPI={(api: ExcalidrawImperativeAPI) =>
                         setExcalidrawAPI(api)
                     }
-                    initialData={initialStatePromiseRef.current.promise}
+                    initialData={{
+                        ...initialStatePromiseRef.current.promise,
+                        appState: {
+                            viewBackgroundColor: "#f5f5f5", // Цвет фона холста
+                            currentItemStrokeColor: "#000", // Цвет обводки элементов
+                        }
+                    }}
                     viewModeEnabled={viewMode}
                     zenModeEnabled={zenMode}
                     gridModeEnabled={gridMode}
